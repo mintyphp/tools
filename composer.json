@@ -1,0 +1,15 @@
+{
+    "name": "mindaphp/tools",
+    "license": "MIT",
+    "authors": [
+    {
+        "name": "Maurits van der Schee",
+        "email": "maurits@vdschee.nl",
+        "homepage": "https://www.tqdev.com"
+    }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "ext-zip": "*"
+    }
+}

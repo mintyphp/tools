@@ -1,8 +1,8 @@
 <?php
 // Change directory to project root
-chdir(__DIR__ . '/..');
+chdir(__DIR__ . '/../../..');
 // Use default autoload implementation
-require 'vendor/mindaphp/core/Loader.php';
+require 'vendor/mindaphp/core/src/Loader.php';
 // Load the config parameters
 require 'config/config.php';
 
@@ -45,4 +45,4 @@ function adminer_object()
 
 }
 
-include 'tools/latest.php';
+include 'vendor/mindaphp/tools/latest.php';
