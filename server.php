@@ -1,6 +1,5 @@
 <?php
 // Change directory to project root
-
 chdir(__DIR__ . '/../../..');
 session_save_path(sys_get_temp_dir());
 $dir = $_SERVER['DOCUMENT_ROOT'];
@@ -13,7 +12,7 @@ if (file_exists($file) && (strpos($file, $dir) === 0)) {
 }
 
 if (in_array($_SERVER['SCRIPT_NAME'], array('/adminer.php', '/conventionist.php', '/configurator.php', '/generator.php'))) {
-    require 'tools' . $_SERVER['SCRIPT_NAME'];
+    require 'vendor/mindaphp/tools' . $_SERVER['SCRIPT_NAME'];
 } else {
     $_SERVER['SCRIPT_NAME'] = '/index.php';
     chdir('web');
