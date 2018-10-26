@@ -6,7 +6,7 @@ $created = 0;
 $updated = 0;
 $url = "https://github.com/mindaphp/mindaphp/archive/master.zip";
 $zipDir = 'mindaphp-master/';
-$archive = 'tools/master.zip';
+$archive = 'vendor/mindaphp/tools/master.zip';
 $path = realpath('.');
 $prefixes = array(
     'web/index.php',
