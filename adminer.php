@@ -45,4 +45,4 @@ function adminer_object()
 
 }
 
-include 'tools/latest.php';
+include 'vendor/mindaphp/tools/latest.php';
