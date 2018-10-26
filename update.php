@@ -1,6 +1,6 @@
 <?php
 // Change directory to project root
-chdir(__DIR__ . '/..');
+chdir(__DIR__ . '/../../..');
 $files = 0;
 $created = 0;
 $updated = 0;
