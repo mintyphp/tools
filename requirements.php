@@ -19,20 +19,4 @@ if (!file_exists('vendor/mindaphp/tools/latest.php')) {
     echo "ERROR: Could not write 'vendor/mindaphp/tools/latest.php'\n";
     exit(1);
 }
-if (!file_exists('composer.phar')) {
-    echo "INFO: Composer not found, downloading...\n";
-    file_put_contents('composer.phar', file_get_contents('https://getcomposer.org/composer.phar'));
-}
-if (!file_exists('composer.phar')) {
-    echo "ERROR: Could not write 'composer.phar'\n";
-    exit(1);
-}
-if (!file_exists('phpunit.phar')) {
-    echo "INFO: PHPUnit not found, downloading...\n";
-    file_put_contents('phpunit.phar', file_get_contents('https://phar.phpunit.de/phpunit.phar'));
-}
-if (!file_exists('phpunit.phar')) {
-    echo "ERROR: Could not write 'phpunit.phar'\n";
-    exit(1);
-}
 exit(0);
