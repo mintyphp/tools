@@ -1,6 +1,4 @@
 <?php
-// Change directory to project root
-chdir(__DIR__ . '/../../..');
 session_save_path(sys_get_temp_dir());
 $dir = $_SERVER['DOCUMENT_ROOT'];
 $file = realpath($dir . $_SERVER['SCRIPT_NAME']);

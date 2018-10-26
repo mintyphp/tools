@@ -1,6 +1,4 @@
 <?php
-// Change directory to project root
-chdir(__DIR__ . '/../../..');
 // Use default autoload implementation
 require 'vendor/mindaphp/core/src/Loader.php';
 // Load the libraries
