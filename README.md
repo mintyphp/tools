@@ -1,1 +1,1 @@
-# MindaPHP Tools
+# MintyPHP Tools

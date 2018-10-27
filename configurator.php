@@ -1,6 +1,6 @@
 <?php
 // Use default autoload implementation
-require 'vendor/mindaphp/core/src/Loader.php';
+require 'vendor/mintyphp/core/src/Loader.php';
 // Load the libraries
 require 'config/loader.php';
 // Load the config parameters
@@ -164,7 +164,7 @@ class Configurator
 
         };
         $code = "<?php\n";
-        $code .= "namespace MindaPHP\Config;\n";
+        $code .= "namespace MintyPHP\Config;\n";
         foreach ($config as $class => $variables) {
             $nameChars = $valueChars = 0;
             foreach ($variables as $v) {

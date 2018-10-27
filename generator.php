@@ -1,12 +1,12 @@
 <?php
 // Use default autoload implementation
-require 'vendor/mindaphp/core/src/Loader.php';
+require 'vendor/mintyphp/core/src/Loader.php';
 // Load the libraries
 require 'config/loader.php';
 // Load the config parameters
 require 'config/config.php';
 
-use MindaPHP\DB;
+use MintyPHP\DB;
 
 $tables = isset($_POST['tables']) ? $_POST['tables'] : false;
 

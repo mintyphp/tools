@@ -11,12 +11,12 @@ if (!function_exists('mysqli_connect')) {
     echo "ERROR: MySQLi extension not found\n";
     exit(1);
 }
-if (!file_exists('vendor/mindaphp/tools/latest.php')) {
+if (!file_exists('vendor/mintyphp/tools/latest.php')) {
     echo "INFO: Adminer not found, downloading...\n";
-    file_put_contents('vendor/mindaphp/tools/latest.php', file_get_contents('http://adminer.org/latest.php'));
+    file_put_contents('vendor/mintyphp/tools/latest.php', file_get_contents('http://adminer.org/latest.php'));
 }
-if (!file_exists('vendor/mindaphp/tools/latest.php')) {
-    echo "ERROR: Could not write 'vendor/mindaphp/tools/latest.php'\n";
+if (!file_exists('vendor/mintyphp/tools/latest.php')) {
+    echo "ERROR: Could not write 'vendor/mintyphp/tools/latest.php'\n";
     exit(1);
 }
 exit(0);
