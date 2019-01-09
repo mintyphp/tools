@@ -1,8 +1,6 @@
 <?php
 // Use default autoload implementation
 require 'vendor/mintyphp/core/src/Loader.php';
-// Load the libraries
-require 'config/loader.php';
 // Load the config parameters
 require 'config/config.php';
 
