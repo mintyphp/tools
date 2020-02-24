@@ -21,6 +21,10 @@ function adminer_object()
 
     class AdminerSoftware extends Adminer
     {
+        public function loginForm() {
+            echo "<p><a href='?'>Click to login</a></p>\n";
+        }
+        
         public function navigation($missing)
         {
             parent::navigation($missing);
