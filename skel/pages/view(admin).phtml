@@ -2,17 +2,17 @@
   <h1>View <?php echo $singularize($humanize($table)); ?></h1>
 </div>
 <div>
-<?php foreach ($fields as $field): ?>
+<?php foreach ($fields as $field): $column = $field['COLUMNS']['COLUMN_NAME']; ?>
     <dl>
-<?php if ($relation = $findBelongsTo($field['COLUMNS']['COLUMN_NAME'])): ?>
-        <dt><?php echo ucfirst($singularize($humanize($relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']))); ?></dt>
+<?php if ($relation = $findBelongsTo($column)): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?>
+        <dt><?php echo ucfirst($singularize($humanize($referencedTable))); ?></dt>
 <?php else: ?>
-        <dt><?php echo ucfirst($humanize($field['COLUMNS']['COLUMN_NAME'])); ?></dt>
+        <dt><?php echo ucfirst($humanize($column)); ?></dt>
 <?php endif;?>
-<?php if ($relation = $findBelongsTo($field['COLUMNS']['COLUMN_NAME'])): ?>
-          <dd><?php echo '<?php' ?> e($<?php echo $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?>[$data['<?php echo $table; ?>']['<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>']]);?></dd>
+<?php if ($relation = $findBelongsTo($column)): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?>
+          <dd><?php echo '<?php' ?> e($<?php echo $referencedTable; ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']]);?></dd>
 <?php else: ?>
-          <dd><?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>']);?></dd>
+          <dd><?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']);?></dd>
 <?php endif;?>
       </dl>
 <?php endforeach;?>

@@ -2,21 +2,21 @@
   <h1>New <?php echo $singularize($humanize($table)); ?></h1>
 </div>
 <form method="post">
-<?php foreach ($fields as $field): ?>
-    <div class="form-group <?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]'])?'has-error':''); ?>">
-<?php if ($relation = $findBelongsTo($field['COLUMNS']['COLUMN_NAME'])): ?>
-        <label class="control-label" for="<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]"><?php echo ucfirst($singularize($humanize($relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']))); ?></label>
-        <select class="form-control" name="<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]" id="<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]">
-            <option value=""<?php echo '<?php' ?> e(''==$data['<?php echo $table; ?>']['<?php echo $field['COLUMNS']['COLUMN_NAME'] ?>']?' selected="selected"':''); ?>>...</option>
-            <?php echo '<?php' ?> foreach ($<?php echo $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?> as $key => $value): ?>
-            <option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data['<?php echo $table; ?>']['<?php echo $field['COLUMNS']['COLUMN_NAME'] ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
-            <?php echo '<?php' ?> endforeach; ?>
-        </select>
+<?php foreach ($fields as $field): $column = $field['COLUMNS']['COLUMN_NAME']; $optional = $field['COLUMNS']['IS_NULLABLE'];?>
+	<div class="form-group <?php echo $optional?'optional ':''; ?><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?'has-error':''); ?>">
+<?php if ($relation = $findBelongsTo($column)): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME'];?>
+	    <label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($singularize($humanize($referencedTable))); ?></label>
+	    <select class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" id="<?php echo $table; ?>[<?php echo $column; ?>]"<?php echo $optional?'':' required'; ?>>
+	        <option value=""<?php echo '<?php' ?> e(''==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>>...</option>
+	        <?php echo '<?php' ?> foreach ($<?php echo $referencedTable; ?> as $key => $value): ?>
+	        <option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
+	        <?php echo '<?php' ?> endforeach; ?>
+	    </select>
 <?php else: ?>
-        <label class="control-label" for="<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]"><?php echo ucfirst($humanize($field['COLUMNS']['COLUMN_NAME'])); ?></label>
-        <input class="form-control" name="<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]" type="text" value="<?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>']); ?>" id="<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]" />
+        <label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($humanize($column)); ?></label>
+        <input class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" type="text" value="<?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']); ?>" id="<?php echo $table; ?>[<?php echo $column; ?>]" />
 <?php endif;?>
-        <span class="help-block"><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]'])?$errors['<?php echo $table; ?>[<?php echo $field['COLUMNS']['COLUMN_NAME']; ?>]']:''); ?></span>
+        <span class="help-block"><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?$errors['<?php echo $table; ?>[<?php echo $column; ?>]']:''); ?></span>
     </div>
 <?php endforeach;?>
 

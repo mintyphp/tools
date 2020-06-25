@@ -1,12 +1,18 @@
 <?php echo '<?php' ?>
-<?php foreach ($belongsTo as $relation): ?>
-$<?php echo $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?> = DB::selectPairs('select `<?php echo $relation['KEY_COLUMN_USAGE']['REFERENCED_COLUMN_NAME']; ?>`,`<?php echo $findDisplayField($relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']); ?>` from `<?php echo $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?>`');
+<?php foreach ($belongsTo as $relation): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; $referencedColumn = $relation['KEY_COLUMN_USAGE']['REFERENCED_COLUMN_NAME']; ?>
+$<?php echo $referencedTable; ?> = DB::selectPairs('select `<?php echo $referencedColumn; ?>`,`<?php echo $findDisplayField($referencedTable); ?>` from `<?php echo $referencedTable; ?>`');
 <?php endforeach;?>
 if ($_SERVER['REQUEST_METHOD']=='POST') {
     $data = $_POST;
-<?php foreach ($belongsTo as $relation): ?>
-    if (!isset($<?php echo $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?>[$data['<?php echo $table; ?>']['<?php echo $relation['KEY_COLUMN_USAGE']['COLUMN_NAME']; ?>']])) $errors['<?php echo $table; ?>[<?php echo $relation['KEY_COLUMN_USAGE']['COLUMN_NAME']; ?>]']='<?php echo ucfirst($singularize($humanize($relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']))); ?> not found';
+<?php foreach ($belongsTo as $relation): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; $column = $relation['KEY_COLUMN_USAGE']['COLUMN_NAME']; ?>
+    if (!isset($<?php echo $referencedTable; ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']])) $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='<?php echo ucfirst($singularize($humanize($referencedTable))); ?> not found';
 <?php endforeach;?>
+<?php foreach ($fields as $field): if (!$field['COLUMNS']['IS_NULLABLE']): $column = $field['COLUMNS']['COLUMN_NAME']; ?>
+    if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='<?php echo ucfirst($humanize($column)); ?> must be filled';
+<?php endif; endforeach;?>
+<?php foreach ($fields as $field): if ($field['COLUMNS']['IS_NULLABLE']): $column = $field['COLUMNS']['COLUMN_NAME']; ?>
+    if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) $data['<?php echo $table; ?>']['<?php echo $column; ?>']=null;
+<?php endif; endforeach;?>
     if (!isset($errors)) {
         $id = DB::insert('INSERT INTO `<?php echo $table; ?>` (<?php echo implode(', ', array_map(function ($field) {return '`' . $field['COLUMNS']['COLUMN_NAME'] . '`';}, $fields)); ?>) VALUES (<?php echo implode(', ', array_map(function () {return '?';}, $fields)); ?>)', <?php echo implode(', ', array_map(function ($field) use ($table) {return "\$data['$table']['" . $field['COLUMNS']['COLUMN_NAME'] . "']";}, $fields)); ?>);
         if ($id) {
