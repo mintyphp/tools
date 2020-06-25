@@ -10,11 +10,11 @@
         <dt><?php echo ucfirst($humanize($column)); ?></dt>
 <?php endif;?>
 <?php if ($relation = $findBelongsTo($column)): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; ?>
-          <dd><?php echo '<?php' ?> e($<?php echo $referencedTable; ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']]);?></dd>
+        <dd><?php echo '<?php' ?> e($<?php echo $referencedTable; ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']]);?></dd>
 <?php else: ?>
-          <dd><?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']);?></dd>
+        <dd><?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']);?></dd>
 <?php endif;?>
-      </dl>
+    </dl>
 <?php endforeach;?>
 </div>
 <p>

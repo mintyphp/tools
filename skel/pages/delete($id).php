@@ -1,4 +1,4 @@
-<?php echo '<?php' ?>
+<?php echo '<?php'."\n" ?>
 if (!empty($_POST)) {
     $rows = DB::delete('DELETE FROM `<?php echo $table; ?>` WHERE `id` = ?', $id);
     if (!$rows) Flash::set('danger','<?php echo ucfirst($singularize($humanize($table))); ?> not deleted');
