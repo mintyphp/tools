@@ -13,7 +13,7 @@ if (!function_exists('mysqli_connect')) {
 }
 if (!file_exists('vendor/mintyphp/tools/latest.php')) {
     echo "INFO: Adminer not found, downloading...\n";
-    file_put_contents('vendor/mintyphp/tools/latest.php', file_get_contents('http://adminer.org/latest.php'));
+    file_put_contents('vendor/mintyphp/tools/latest.php', file_get_contents('https://adminer.org/latest.php'));
 }
 if (!file_exists('vendor/mintyphp/tools/latest.php')) {
     echo "ERROR: Could not write 'vendor/mintyphp/tools/latest.php'\n";
