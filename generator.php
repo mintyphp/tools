@@ -6,8 +6,8 @@ require 'config/config.php';
 
 use MintyPHP\DB;
 
-$directory = $_POST['directory'] ?? false;
-$table = $_POST['table'] ?? false;
+$directory = $_GET['directory'] ?? false;
+$table = $_GET['table'] ?? false;
 $template = $_POST['template'] ?? false;
 $singular = $_POST['singular'] ?? false;
 $plural = $_POST['plural'] ?? false;
@@ -42,9 +42,14 @@ $singularize = function ($v) {
 $pluralize = function ($v) {
     return rtrim($v, 's') . 's';
 };
+$camelize = function ($word) {
+    return preg_replace_callback('/_[a-z]/', function ($matches) {
+        return strtolower($matches[0]);
+    }, $word);
+};
 
 if (!$directory) {
-    echo '<form method="post">';
+    echo '<form method="get">';
     echo '<input type="hidden" name="template" value="' . $template . '">';
     echo '<label>Directory</label><br>';
     $dirs = readdirs('pages', ['pages']);
@@ -57,9 +62,9 @@ if (!$directory) {
     echo '<input type="submit" value="Next">';
     echo '</form>';
 } elseif (!$table) {
-    echo '<form method="post">';
+    echo '<form method="get">';
     echo '<label>Directory</label><br>';
-    echo '<div style="padding: 4px 1px;">' . $directory . '</div>';
+    echo '<div style="padding: 4px 1px;"><a href="?">' . $directory . '</a></div>';
     echo '<input type="hidden" name="directory" value="' . $directory . '">';
     echo '<label>Table</label><br>';
     echo '<select name="table">';
@@ -80,10 +85,10 @@ if (!$directory) {
     $plural = $plural ?: $pluralize($humanize($table));
     echo '<form method="post">';
     echo '<label>Directory</label><br>';
-    echo '<div style="padding: 4px 1px;">' . $directory . '</div>';
+    echo '<div style="padding: 4px 1px;"><a href="?">' . $directory . '</a></div>';
     echo '<input type="hidden" name="directory" value="' . $directory . '">';
     echo '<label>Table</label><br>';
-    echo '<div style="padding: 4px 1px;">' . $table . '</div>';
+    echo '<div style="padding: 4px 1px;"><a href="?directory=' . urlencode($directory) . '">' . $table . '</a></div>';
     echo '<input type="hidden" name="table" value="' . $table . '">';
     echo '<label>Template</label><br>';
     $templates = glob("templates/*.phtml");
@@ -99,32 +104,29 @@ if (!$directory) {
     echo '<input type="text" name="singular" value="' . $singular . '"><br>';
     echo '<label>Table name plular</label><br>';
     echo '<input type="text" name="plural" value="' . $plural . '"><br>';
-    $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
-    $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND table_name = ?", $table);
+    $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
+    $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
     foreach ($fieldNames as $fieldName) {
         $reference = $references[$fieldName] ?? '';
         echo '<label>Table field "' . $fieldName . '"' . ($reference ? " ($reference)" : '') . '</label><br>';
         echo '<input type="text" name="fieldNames[' . $fieldName . ']" value="' . ($reference ? preg_replace('/_id$/', '', $fieldName) : $fieldName) . '"><br>';
     }
-    $otherTables = array_unique($references);
     $findDisplayField = function ($table) {
-        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ? and COLUMN_NAME = 'name' limit 1", $table);
+        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_NAME IN ('name','title') limit 1", $table);
         if ($field) {
             return $field;
         }
-
-        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
+        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
         if ($field) {
             return $field;
         }
-
-        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ? limit 1", $table);
+        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? limit 1", $table);
         return $field;
     };
-    foreach ($otherTables as $otherTable) {
+    foreach (array_unique($references) as $otherTable) {
         $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and table_name = ?", $otherTable);
         echo '<label>Display field table "' . $otherTable . '"</label><br>';
-        echo '<select name="displayField[' . $otherTable . ']">';
+        echo '<select name="displayFields[' . $otherTable . ']">';
         foreach ($fieldNames as $fieldName) {
             $selected = $fieldName == $findDisplayField($otherTable) ? 'selected' : '';
             echo '<option value="' . $fieldName . '" ' . $selected . '>' . $fieldName . '</option>';
@@ -139,27 +141,22 @@ if (!$directory) {
         'index(admin).phtml',
         'add().php',
         'add(admin).phtml',
-        'edit($id).php',
-        'edit(admin).phtml',
-        'delete($id).php',
-        'delete(admin).phtml',
-        'view($id).php',
-        'view(admin).phtml',
+        //        'edit($id).php',
+        //        'edit(admin).phtml',
+        //        'delete($id).php',
+        //        'delete(admin).phtml',
+        //        'view($id).php',
+        //        'view(admin).phtml',
     );
 
-    $fields = DB::select("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
-    $belongsTo = DB::select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND TABLE_SCHEMA=DATABASE() AND table_name = ?", $table);
-    $hasMany = DB::select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME = ?", $table);
-    $hasAndBelongsToMany = DB::select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE a, INFORMATION_SCHEMA.KEY_COLUMN_USAGE b WHERE a.REFERENCED_TABLE_NAME IS NOT NULL AND b.REFERENCED_TABLE_NAME IS NOT NULL AND a.TABLE_SCHEMA=DATABASE() and b.TABLE_SCHEMA=DATABASE() and a.table_name = b.table_name and a.CONSTRAINT_NAME != b.CONSTRAINT_NAME and a.REFERENCED_TABLE_NAME = ?", $table);
-
-    $findBelongsTo = function ($name) use ($belongsTo) {
-        foreach ($belongsTo as $relation) {
-            if ($relation['KEY_COLUMN_USAGE']['COLUMN_NAME'] == $name) {
-                return $relation;
-            }
-        }
-        return false;
-    };
+    $fields = DB::select("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
+    $fields = array_map(function ($v) {
+        return $v['COLUMNS'];
+    }, $fields);
+    $fields = array_combine(array_column($fields, 'COLUMN_NAME'), array_values($fields));
+    $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
+    $primaryKey = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_NAME = 'PRIMARY' AND TABLE_NAME = ? AND TABLE_SCHEMA=DATABASE()", $table);
+    $primaryKeys = DB::selectPairs("SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_NAME = 'PRIMARY' AND TABLE_NAME IN (???) AND TABLE_SCHEMA=DATABASE()", $references);
 
     //echo $table . '<br/><pre>';
     //var_dump($fields[0], $belongsTo, $hasMany, $hasAndBelongsToMany);

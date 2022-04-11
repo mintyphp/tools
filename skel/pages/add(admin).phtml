@@ -1,27 +1,34 @@
+<?php echo '<?php'."\n" ?>
+
+use MintyPHP\Session;
+
+?>
 <div class="page-header">
-  <h1>New <?php echo $singularize($humanize($table)); ?></h1>
+    <h1>New <?php echo ucfirst($singular); ?></h1>
 </div>
 <form method="post">
-<?php foreach ($fields as $field): $column = $field['COLUMNS']['COLUMN_NAME']; $optional = $field['COLUMNS']['IS_NULLABLE'];?>
-	<div class="form-group <?php echo $optional?'optional ':''; ?><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?'has-error':''); ?>">
-<?php if ($relation = $findBelongsTo($column)): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME'];?>
-	    <label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($singularize($humanize($referencedTable))); ?></label>
-	    <select class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" id="<?php echo $table; ?>[<?php echo $column; ?>]"<?php echo $optional?'':' required'; ?>>
-	        <option value=""<?php echo '<?php' ?> e(''==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>>...</option>
+<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; $optional = $field['IS_NULLABLE']; $referencedTable = $references[$column] ?? false; ?>
+
+    <div class="form-group <?php echo $optional ? 'optional ' : ''; ?><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?'has-error':''); ?>">
+<?php if ($referencedTable): ?>
+        <label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($fieldNames[$column]); ?></label>
+        <select class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" id="<?php echo $table; ?>[<?php echo $column; ?>]" <?php echo $optional ? '' : ' required'; ?>>
+            <option value="" <?php echo '<?php' ?> e(''==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>>...</option>
 	        <?php echo '<?php' ?> foreach ($<?php echo $referencedTable; ?> as $key => $value): ?>
-	        <option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
+	            <option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
 	        <?php echo '<?php' ?> endforeach; ?>
 	    </select>
-<?php else: ?>
+<?php else : ?>
         <label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($humanize($column)); ?></label>
         <input class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" type="text" value="<?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']); ?>" id="<?php echo $table; ?>[<?php echo $column; ?>]" />
-<?php endif;?>
+<?php endif; ?>
         <span class="help-block"><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?$errors['<?php echo $table; ?>[<?php echo $column; ?>]']:''); ?></span>
     </div>
-<?php endforeach;?>
+<?php endforeach; ?>
 
     <div class="form-group">
         <button class="btn btn-primary" type="submit">Save</button>
     </div>
+
     <?php echo '<?php' ?> Session::getCsrfInput(); ?>
 </form>
