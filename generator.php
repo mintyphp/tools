@@ -63,7 +63,7 @@ if (!$directory) {
     echo '<label>Table</label><br>';
     echo '<select name="table">';
     if ($directory) {
-        $entities = DB::select('SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` = ?;', DB::$database);
+        $entities = DB::select('SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` = ? ORDER BY `TABLE_NAME`;', DB::$database);
         foreach ($entities as $entity) {
             $table = $entity['TABLES']['TABLE_NAME'];
             if (!file_exists($directory . '/' . $table)) {
