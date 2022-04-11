@@ -12,6 +12,7 @@ $template = $_POST['template'] ?? false;
 $singular = $_POST['singular'] ?? false;
 $plural = $_POST['plural'] ?? false;
 $fieldNames = $_POST['fieldNames'] ?? [];
+$displayFields = $_POST['displayFields'] ?? [];
 
 function readdirs($directory, $entries_array = array())
 {
@@ -100,8 +101,22 @@ if (!$directory) {
     echo '<input type="text" name="plural" value="' . $plural . '"><br>';
     echo '<label>Table fields</label><br>';
     $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
+    $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from information_schema.KEY_COLUMN_USAGE where referenced_table_name is not null and table_schema=DATABASE() AND table_name = ?", $table);
     foreach ($fieldNames as $fieldName) {
-        echo '<input type="text" name="fieldNames[' . $fieldName . ']" value="' . preg_replace('/_id$/', '', $fieldName) . '"><br>';
+        $reference = $references[$fieldName] ?? '';
+        echo '<input type="text" name="fieldNames[' . $fieldName . ']" value="' . preg_replace('/_id$/', '', $fieldName) . '"> ' . $reference . '<br>';
+    }
+    $otherTables = array_unique($references);
+    foreach ($otherTables as $otherTable) {
+        $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $otherTable);
+        echo '<label>Display field "' . $otherTable . '"</label><br>';
+        echo '<select name="displayField[' . $otherTable . ']">';
+        foreach ($fieldNames as $fieldName) {
+            if ($fieldName == 'id') continue;
+            $selected = in_array($fieldName, ['name', 'text', 'description']);
+            echo '<option value="' . $fieldName . '" ' . $selected . '>' . $fieldName . '</option>';
+        }
+        echo '</select><br>';
     }
     echo '<input type="submit" value="Next">';
     echo '</form>';
