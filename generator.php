@@ -43,21 +43,6 @@ $pluralize = function ($v) {
     return rtrim($v, 's') . 's';
 };
 
-$findDisplayField = function ($table) {
-    $field = DB::selectValue("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ? and COLUMN_NAME = 'name' limit 1", $table);
-    if ($field) {
-        return $field;
-    }
-
-    $field = DB::selectValue("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
-    if ($field) {
-        return $field;
-    }
-
-    $field = DB::selectValue("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ? limit 1", $table);
-    return $field;
-};
-
 if (!$directory) {
     echo '<form method="post">';
     echo '<input type="hidden" name="template" value="' . $template . '">';
@@ -114,20 +99,34 @@ if (!$directory) {
     echo '<input type="text" name="singular" value="' . $singular . '"><br>';
     echo '<label>Table name plular</label><br>';
     echo '<input type="text" name="plural" value="' . $plural . '"><br>';
-    $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
-    $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from information_schema.KEY_COLUMN_USAGE where referenced_table_name is not null and table_schema=DATABASE() AND table_name = ?", $table);
+    $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
+    $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND table_name = ?", $table);
     foreach ($fieldNames as $fieldName) {
         $reference = $references[$fieldName] ?? '';
         echo '<label>Table field "' . $fieldName . '"' . ($reference ? " ($reference)" : '') . '</label><br>';
         echo '<input type="text" name="fieldNames[' . $fieldName . ']" value="' . ($reference ? preg_replace('/_id$/', '', $fieldName) : $fieldName) . '"><br>';
     }
     $otherTables = array_unique($references);
+    $findDisplayField = function ($table) {
+        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ? and COLUMN_NAME = 'name' limit 1", $table);
+        if ($field) {
+            return $field;
+        }
+
+        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
+        if ($field) {
+            return $field;
+        }
+
+        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ? limit 1", $table);
+        return $field;
+    };
     foreach ($otherTables as $otherTable) {
-        $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and table_name = ?", $otherTable);
+        $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and table_name = ?", $otherTable);
         echo '<label>Display field table "' . $otherTable . '"</label><br>';
         echo '<select name="displayField[' . $otherTable . ']">';
         foreach ($fieldNames as $fieldName) {
-            $selected = $findDisplayField($otherTable);
+            $selected = $fieldName == $findDisplayField($otherTable) ? 'selected' : '';
             echo '<option value="' . $fieldName . '" ' . $selected . '>' . $fieldName . '</option>';
         }
         echo '</select><br>';
@@ -148,10 +147,10 @@ if (!$directory) {
         'view(admin).phtml',
     );
 
-    $fields = DB::select("SELECT * FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
-    $belongsTo = DB::select("SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE referenced_table_name IS NOT NULL AND table_schema=DATABASE() AND table_name = ?", $table);
-    $hasMany = DB::select("SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE referenced_table_name IS NOT NULL AND table_schema=DATABASE() AND referenced_table_name = ?", $table);
-    $hasAndBelongsToMany = DB::select("SELECT * FROM information_schema.KEY_COLUMN_USAGE a, information_schema.KEY_COLUMN_USAGE b WHERE a.referenced_table_name IS NOT NULL AND b.referenced_table_name IS NOT NULL AND a.table_schema=DATABASE() and b.table_schema=DATABASE() and a.table_name = b.table_name and a.CONSTRAINT_NAME != b.CONSTRAINT_NAME and a.referenced_table_name = ?", $table);
+    $fields = DB::select("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
+    $belongsTo = DB::select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND TABLE_SCHEMA=DATABASE() AND table_name = ?", $table);
+    $hasMany = DB::select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME = ?", $table);
+    $hasAndBelongsToMany = DB::select("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE a, INFORMATION_SCHEMA.KEY_COLUMN_USAGE b WHERE a.REFERENCED_TABLE_NAME IS NOT NULL AND b.REFERENCED_TABLE_NAME IS NOT NULL AND a.TABLE_SCHEMA=DATABASE() and b.TABLE_SCHEMA=DATABASE() and a.table_name = b.table_name and a.CONSTRAINT_NAME != b.CONSTRAINT_NAME and a.REFERENCED_TABLE_NAME = ?", $table);
 
     $findBelongsTo = function ($name) use ($belongsTo) {
         foreach ($belongsTo as $relation) {
