@@ -135,9 +135,9 @@ if (!$directory) {
     );
 
     $fields = DB::select("SELECT * FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
-    $belongsTo = DB::select("select * from information_schema.KEY_COLUMN_USAGE where referenced_table_name is not null and table_schema=DATABASE() AND table_name = ?", $table);
-    $hasMany = DB::select("select * from information_schema.KEY_COLUMN_USAGE where referenced_table_name is not null and table_schema=DATABASE() AND referenced_table_name = ?", $table);
-    $hasAndBelongsToMany = DB::select("select * from information_schema.KEY_COLUMN_USAGE a, information_schema.KEY_COLUMN_USAGE b where a.referenced_table_name is not null and b.referenced_table_name is not null and a.table_schema=DATABASE() and b.table_schema=DATABASE() and a.table_name = b.table_name and a.CONSTRAINT_NAME != b.CONSTRAINT_NAME and a.referenced_table_name = ?", $table);
+    $belongsTo = DB::select("SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE referenced_table_name IS NOT NULL AND table_schema=DATABASE() AND table_name = ?", $table);
+    $hasMany = DB::select("SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE referenced_table_name IS NOT NULL AND table_schema=DATABASE() AND referenced_table_name = ?", $table);
+    $hasAndBelongsToMany = DB::select("SELECT * FROM information_schema.KEY_COLUMN_USAGE a, information_schema.KEY_COLUMN_USAGE b WHERE a.referenced_table_name IS NOT NULL AND b.referenced_table_name IS NOT NULL AND a.table_schema=DATABASE() and b.table_schema=DATABASE() and a.table_name = b.table_name and a.CONSTRAINT_NAME != b.CONSTRAINT_NAME and a.referenced_table_name = ?", $table);
 
     $findDisplayField = function ($table) {
         $field = DB::selectValue("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ? and COLUMN_NAME = 'name' limit 1", $table);
