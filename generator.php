@@ -6,10 +6,12 @@ require 'config/config.php';
 
 use MintyPHP\DB;
 
-$template = isset($_POST['template']) ? $_POST['template'] : false;
-$directory = isset($_POST['directory']) ? $_POST['directory'] : false;
-$table = isset($_POST['table']) ? $_POST['table'] : false;
-$field = isset($_POST['field']) ? $_POST['field'] : false;
+$directory = $_POST['directory'] ?? false;
+$table = $_POST['table'] ?? false;
+$template = $_POST['template'] ?? false;
+$singular = $_POST['singular'] ?? false;
+$plural = $_POST['plural'] ?? false;
+$fieldNames = $_POST['fieldNames'] ?? [];
 
 function readdirs($directory, $entries_array = array())
 {
@@ -30,23 +32,18 @@ function readdirs($directory, $entries_array = array())
     return $entries_array;
 }
 
-if (!$template) {
+$humanize = function ($v) {
+    return str_replace('_', ' ', $v);
+};
+$singularize = function ($v) {
+    return rtrim($v, 's');
+};
+$pluralize = function ($v) {
+    return rtrim($v, 's') . 's';
+};
+
+if (!$directory) {
     echo '<form method="post">';
-    echo '<label>Template</label><br>';
-    $templates = glob("templates/*.phtml");
-    echo '<select name="template">';
-    foreach ($templates as $template) {
-        $begin = strpos($template, '/') + 1;
-        $template = substr($template, $begin, strrpos($template, '.') - $begin);
-        echo '<option value="' . $template . '">' . $template . '</option>';
-    }
-    echo '</select><br>';
-    echo '<input type="submit" value="Next">';
-    echo '</form>';
-} elseif (!$directory) {
-    echo '<form method="post">';
-    echo '<label>Template</label><br>';
-    echo '<div style="padding: 4px 1px;">' . $template . '</div>';
     echo '<input type="hidden" name="template" value="' . $template . '">';
     echo '<label>Directory</label><br>';
     $dirs = readdirs('pages', ['pages']);
@@ -60,9 +57,6 @@ if (!$template) {
     echo '</form>';
 } elseif (!$table) {
     echo '<form method="post">';
-    echo '<label>Template</label><br>';
-    echo '<div style="padding: 4px 1px;">' . $template . '</div>';
-    echo '<input type="hidden" name="template" value="' . $template . '">';
     echo '<label>Directory</label><br>';
     echo '<div style="padding: 4px 1px;">' . $directory . '</div>';
     echo '<input type="hidden" name="directory" value="' . $directory . '">';
@@ -80,6 +74,36 @@ if (!$template) {
     echo '</select><br>';
     echo '<input type="submit" value="Next">';
     echo '</form>';
+} elseif (!$template) {
+    $singular = $singular ?: $singularize($humanize($table));
+    $plural = $plural ?: $pluralize($humanize($table));
+    echo '<form method="post">';
+    echo '<label>Directory</label><br>';
+    echo '<div style="padding: 4px 1px;">' . $directory . '</div>';
+    echo '<input type="hidden" name="directory" value="' . $directory . '">';
+    echo '<label>Table</label><br>';
+    echo '<div style="padding: 4px 1px;">' . $table . '</div>';
+    echo '<input type="hidden" name="table" value="' . $table . '">';
+    echo '<label>Template</label><br>';
+    $templates = glob("templates/*.phtml");
+    echo '<select name="template">';
+    foreach ($templates as $template) {
+        $begin = strpos($template, '/') + 1;
+        $template = substr($template, $begin, strrpos($template, '.') - $begin);
+        echo '<option value="' . $template . '">' . $template . '</option>';
+    }
+    echo '</select><br>';
+    echo '<label>Table name singular</label><br>';
+    echo '<input type="text" name="singular" value="' . $singular . '"><br>';
+    echo '<label>Table name plular</label><br>';
+    echo '<input type="text" name="plural" value="' . $plural . '"><br>';
+    echo '<label>Table fields</label><br>';
+    $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
+    foreach ($fieldNames as $fieldName) {
+        echo '<input type="text" name="fieldNames[' . $fieldName . ']" value="' . preg_replace('/_id$/', '', $fieldName) . '"><br>';
+    }
+    echo '<input type="submit" value="Next">';
+    echo '</form>';
 } else {
     $pages = array(
         'index().php',
@@ -93,12 +117,6 @@ if (!$template) {
         'view($id).php',
         'view(admin).phtml',
     );
-    $humanize = function ($v) {
-        return str_replace('_', ' ', $v);
-    };
-    $singularize = function ($v) {
-        return rtrim($v, 's');
-    };
 
     $fields = DB::select("SELECT * FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
     $belongsTo = DB::select("select * from information_schema.KEY_COLUMN_USAGE where referenced_table_name is not null and table_schema=DATABASE() AND table_name = ?", $table);
@@ -141,6 +159,7 @@ if (!$template) {
     foreach ($pages as $page) {
         ob_start();
         include "skel/pages/$page";
-        file_put_contents("$dir/$page", ob_get_clean());
+        $filename = $dir . '/' . str_replace('(admin).phtml', "($template).phtml", $page);
+        file_put_contents($filename, ob_get_clean());
     }
 }

@@ -5,10 +5,10 @@ $<?php echo $referencedTable; ?> = DB::selectPairs('select `<?php echo $referenc
 if ($_SERVER['REQUEST_METHOD']=='POST') {
     $data = $_POST;
 <?php foreach ($belongsTo as $relation): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; $column = $relation['KEY_COLUMN_USAGE']['COLUMN_NAME']; ?>
-    if (!isset($<?php echo $referencedTable; ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']])) $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='<?php echo ucfirst($singularize($humanize($referencedTable))); ?> not found';
+    if (!isset($<?php echo $referencedTable; ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']])) $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='Option not found';
 <?php endforeach;?>
 <?php foreach ($fields as $field): if (!$field['COLUMNS']['IS_NULLABLE']): $column = $field['COLUMNS']['COLUMN_NAME']; ?>
-    if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='<?php echo ucfirst($humanize($column)); ?> must be filled';
+    if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='Field must be filled';
 <?php endif; endforeach;?>
 <?php foreach ($fields as $field): if ($field['COLUMNS']['IS_NULLABLE']): $column = $field['COLUMNS']['COLUMN_NAME']; ?>
     if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) $data['<?php echo $table; ?>']['<?php echo $column; ?>']=null;
