@@ -90,7 +90,8 @@ if (!$directory) {
     foreach ($templates as $template) {
         $begin = strpos($template, '/') + 1;
         $template = substr($template, $begin, strrpos($template, '.') - $begin);
-        echo '<option value="' . $template . '">' . $template . '</option>';
+        $selected = in_array($template, explode('/', $directory));
+        echo '<option value="' . $template . '" ' . ($selected ? 'selected' : '') . '>' . $template . '</option>';
     }
     echo '</select><br>';
     echo '<label>Table name singular</label><br>';
