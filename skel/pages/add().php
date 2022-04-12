@@ -4,24 +4,24 @@ use MintyPHP\DB;
 use MintyPHP\Router;
 
 <?php foreach ($references as $column => $referencedTable): $referencedColumn = $primaryKeys[$referencedTable]; ?>
-$<?php echo $camelize($referencedTable); ?> = DB::selectPairs("SELECT `<?php echo $referencedColumn; ?>`,`<?php echo $displayFields[$referencedTable]; ?>` FROM `<?php echo $referencedTable; ?>`");
+$<?php echo $camelize($referencedTable); ?> = DB::selectPairs("SELECT `<?php echo $referencedColumn; ?>`, `<?php echo $displayFields[$referencedTable]; ?>` FROM `<?php echo $referencedTable; ?>`");
 <?php endforeach;?>
 
-if ($_SERVER['REQUEST_METHOD']=='POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $data = $_POST;
 <?php foreach ($references as $column => $referencedTable): ?>
     if (!isset($<?php echo $camelize($referencedTable); ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']])) {
-        $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='<?php echo ucfirst($fieldNames[$column]); ?> not found';
+        $errors['<?php echo $table; ?>[<?php echo $column; ?>]'] = '<?php echo ucfirst($fieldNames[$column]); ?> not found';
     }
 <?php endforeach;?>
 <?php foreach ($fields as $field): if (!$field['IS_NULLABLE']): $column = $field['COLUMN_NAME']; ?>
     if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) {
-        $errors['<?php echo $table; ?>[<?php echo $column; ?>]']='<?php echo ucfirst($fieldNames[$column]); ?> is required';
+        $errors['<?php echo $table; ?>[<?php echo $column; ?>]'] = '<?php echo ucfirst($fieldNames[$column]); ?> is required';
     }
 <?php endif; endforeach;?>
 <?php foreach ($fields as $field): if ($field['IS_NULLABLE']): $column = $field['COLUMN_NAME']; ?>
     if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) {
-        $data['<?php echo $table; ?>']['<?php echo $column; ?>']=null;
+        $data['<?php echo $table; ?>']['<?php echo $column; ?>'] = null;
     }
 <?php endif; endforeach;?>
     if (!isset($errors)) {

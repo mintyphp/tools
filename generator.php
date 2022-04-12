@@ -141,11 +141,11 @@ if (!$directory) {
         'index(admin).phtml',
         'add().php',
         'add(admin).phtml',
-        //        'edit($id).php',
+        'edit($id).php',
         //        'edit(admin).phtml',
         //        'delete($id).php',
         //        'delete(admin).phtml',
-        //        'view($id).php',
+        'view($id).php',
         //        'view(admin).phtml',
     );
 

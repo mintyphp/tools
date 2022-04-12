@@ -1,5 +1,9 @@
-<?php echo '<?php' ?> 
-$data = DB::selectOne('select * from `<?php echo $table; ?>` where `id`=?',$id);
-<?php foreach ($belongsTo as $relation): $referencedTable = $relation['KEY_COLUMN_USAGE']['REFERENCED_TABLE_NAME']; $referencedColumn = $relation['KEY_COLUMN_USAGE']['REFERENCED_COLUMN_NAME']; ?>
-$<?php echo $referencedTable; ?> = DB::selectPairs('select `<?php echo $referencedColumn; ?>`,`<?php echo $findDisplayField($referencedTable); ?>` from `<?php echo $referencedTable; ?>`');
-<?php endforeach; ?>
+<?php echo '<?php'."\n" ?>
+
+use MintyPHP\DB;
+
+$data = DB::selectOne('SELECT * FROM `<?php echo $table; ?>` WHERE `<?php echo $primaryKey; ?>` = ?', $id);
+
+<?php foreach ($references as $column => $referencedTable): $referencedColumn = $primaryKeys[$referencedTable]; ?>
+$<?php echo $camelize($referencedTable); ?> = DB::selectPairs("SELECT `<?php echo $referencedColumn; ?>`, `<?php echo $displayFields[$referencedTable]; ?>` FROM `<?php echo $referencedTable; ?>`");
+<?php endforeach;?>
