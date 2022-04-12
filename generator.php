@@ -100,9 +100,9 @@ if (!$directory) {
         echo '<option value="' . $template . '" ' . $selected . '>' . $template . '</option>';
     }
     echo '</select><br>';
-    echo '<label>Table name singular</label><br>';
+    echo '<label>Table name singular for "' . $table . '"</label><br>';
     echo '<input type="text" name="singular" value="' . $singular . '"><br>';
-    echo '<label>Table name plular</label><br>';
+    echo '<label>Table name plular for "' . $table . '"</label><br>';
     echo '<input type="text" name="plural" value="' . $plural . '"><br>';
     $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
     $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
@@ -125,7 +125,7 @@ if (!$directory) {
     };
     foreach (array_unique($references) as $otherTable) {
         $fieldNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and table_name = ?", $otherTable);
-        echo '<label>Display field table "' . $otherTable . '"</label><br>';
+        echo '<label>Display field for table "' . $otherTable . '"</label><br>';
         echo '<select name="displayFields[' . $otherTable . ']">';
         foreach ($fieldNames as $fieldName) {
             $selected = $fieldName == $findDisplayField($otherTable) ? 'selected' : '';
