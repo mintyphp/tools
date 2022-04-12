@@ -108,7 +108,7 @@ if (!$directory) {
     $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
     foreach ($fieldNames as $fieldName) {
         $reference = $references[$fieldName] ?? '';
-        echo '<label>Table field "' . $fieldName . '"' . ($reference ? " ($reference)" : '') . '</label><br>';
+        echo '<label>Column name for "' . $fieldName . '"' . ($reference ? " ($reference)" : '') . '</label><br>';
         echo '<input type="text" name="fieldNames[' . $fieldName . ']" value="' . ($reference ? preg_replace('/_id$/', '', $fieldName) : $fieldName) . '"><br>';
     }
     $findDisplayField = function ($table) {
