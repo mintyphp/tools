@@ -146,7 +146,7 @@ if (!$directory) {
         //        'delete($id).php',
         //        'delete(admin).phtml',
         'view($id).php',
-        //        'view(admin).phtml',
+        'view(admin).phtml',
     );
 
     $fields = DB::select("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);

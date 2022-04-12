@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 <?php endif; endforeach;?>
     if (!isset($errors)) {
-        DB::update("UPDATE `<?php echo $table; ?>` SET <?php echo implode(', ', array_map(function ($field) { return '`' . $field['COLUMN_NAME'] . '` = ?';}, $fields)); ?> WHERE `<?php echo $primaryKey; ?>`=?'", <?php echo implode(', ', array_map(function ($field) use ($table) { return "\$data['$table']['" . $field['COLUMN_NAME'] . "']";}, $fields)); ?>, $id);
+        DB::update("UPDATE `<?php echo $table; ?>` SET <?php echo implode(', ', array_map(function ($field) { return '`' . $field['COLUMN_NAME'] . '` = ?';}, $fields)); ?> WHERE `<?php echo $primaryKey; ?>` = ?", <?php echo implode(', ', array_map(function ($field) use ($table) { return "\$data['$table']['" . $field['COLUMN_NAME'] . "']";}, $fields)); ?>, $id);
         Router::redirect("<?php echo $path; ?>/<?php echo $table; ?>/view/$id");
     }
 } else {

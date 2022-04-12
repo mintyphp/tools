@@ -3,9 +3,9 @@
 use MintyPHP\Session;
 
 ?>
-<div class="page-header">
-    <h1>New <?php echo ucfirst($singular); ?></h1>
-</div>
+
+<h1>Add <?php echo ucfirst($singular); ?></h1>
+
 <form method="post">
 <?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; $optional = $field['IS_NULLABLE']; $referencedTable = $references[$column] ?? false; ?>
 
