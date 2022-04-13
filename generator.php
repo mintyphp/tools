@@ -162,6 +162,16 @@ if (!$directory) {
     //var_dump($fields[0], $belongsTo, $hasMany, $hasAndBelongsToMany);
     //echo '</pre>';
 
+    //$dirs = readdirs('pages', ['pages']);
+    //foreach ($dirs as $dir) {
+    //    $dirParts = explode('/', $dir);
+    //    $lastDirPart = array_pop($dirParts);
+    //    if (isset($tablePaths[$lastDirPart])) {
+    //        $tablePaths[$lastDirPart][] = $dir;
+    //    }
+    //}
+    //var_dump($tablePaths);
+
     $path = substr($directory, strlen('pages/'));
     $dir = $directory . '/' . $table;
     if (!file_exists($dir)) {
