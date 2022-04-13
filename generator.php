@@ -142,9 +142,9 @@ if (!$directory) {
         'add().php',
         'add(admin).phtml',
         'edit($id).php',
-        //        'edit(admin).phtml',
-        //        'delete($id).php',
-        //        'delete(admin).phtml',
+        'edit(admin).phtml',
+        'delete($id).php',
+        'delete(admin).phtml',
         'view($id).php',
         'view(admin).phtml',
     );
