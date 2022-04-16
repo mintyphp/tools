@@ -21,19 +21,20 @@ function adminer_object()
 
     class AdminerSoftware extends Adminer
     {
-        public function loginForm() {
+        public function loginForm()
+        {
             echo "<p><a href='?'>Click to login</a></p>\n";
         }
-        
+
         public function navigation($missing)
         {
             parent::navigation($missing);
             echo '<p class="links"><a href="/conventionist.php">Conventionist</a></p>';
+            echo '<p class="links"><a href="/generator.php">Generator</a></p>';
         }
     }
 
     return new AdminerSoftware;
-
 }
 
 include 'vendor/mintyphp/tools/latest.php';
