@@ -169,71 +169,70 @@ if ($step < $steps) {
             }
             echo '<input type="text" name="fieldNames[' . $columnName . ']" value="' . $value . '"><br>';
         }
-    } elseif ($step > 6) { {
-            echo '<label>Column names for "' . $singular . '"</label><br>';
-            echo '<div style="padding: 4px 1px;">' . implode(', ', $fieldNames) . '</div>';
-            foreach ($fieldNames as $columnName => $fieldName) {
-                echo '<input type="hidden" name="fieldNames[' . $columnName . ']" value="' . $fieldName . '">';
+    } elseif ($step > 6) {
+        echo '<label>Column names for "' . $singular . '"</label><br>';
+        echo '<div style="padding: 4px 1px;">' . implode(', ', $fieldNames) . '</div>';
+        foreach ($fieldNames as $columnName => $fieldName) {
+            echo '<input type="hidden" name="fieldNames[' . $columnName . ']" value="' . $fieldName . '">';
+        }
+    }
+    if ($step == 7) {
+        echo '<label>List columns for "' . $singular . '"</label><br>';
+        $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
+        if (!$listFields) {
+            foreach ($columnNames as $i => $columnName) {
+                $listFields[$columnName] = $i < 4 ? 1 : 0;
             }
         }
-        if ($step == 7) {
-            echo '<label>List columns for "' . $singular . '"</label><br>';
-            $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
-            if (!$listFields) {
-                foreach ($columnNames as $i => $columnName) {
-                    $listFields[$columnName] = $i < 4 ? 1 : 0;
-                }
-            }
-            foreach ($columnNames as $columnName) {
-                $checked = in_array($columnName, $listFields) ? ' checked' : '';
-                echo '<input type="checkbox" name="listFields[' . $columnName . ']"' . $checked . '>' . $fieldNames[$columnName] . '<br>';
-            }
-        } elseif ($step > 7) {
-            echo '<label>List columns for "' . $singular . '"</label><br>';
-            $listFieldNames = array_map(function ($v) use ($fieldNames) {
-                return $fieldNames[$v];
-            }, $listFields);
-            echo '<div style="padding: 4px 1px;">' . implode(', ', $listFieldNames) . '</div>';
-            foreach ($listFields as $columnName) {
-                echo '<input type="hidden" name="listFields[' . $columnName . ']" value="1">';
-            }
+        foreach ($columnNames as $columnName) {
+            $checked = in_array($columnName, $listFields) ? ' checked' : '';
+            echo '<input type="checkbox" name="listFields[' . $columnName . ']"' . $checked . '>' . $fieldNames[$columnName] . '<br>';
         }
-        if ($step == 8) {
-            $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
-            $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
-            $findDisplayField = function ($table) {
-                $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_NAME IN ('name','title') limit 1", $table);
-                if ($field) {
-                    return $field;
-                }
-                $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
-                if ($field) {
-                    return $field;
-                }
-                $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? limit 1", $table);
+    } elseif ($step > 7) {
+        echo '<label>List columns for "' . $singular . '"</label><br>';
+        $listFieldNames = array_map(function ($v) use ($fieldNames) {
+            return $fieldNames[$v];
+        }, $listFields);
+        echo '<div style="padding: 4px 1px;">' . implode(', ', $listFieldNames) . '</div>';
+        foreach ($listFields as $columnName) {
+            echo '<input type="hidden" name="listFields[' . $columnName . ']" value="1">';
+        }
+    }
+    if ($step == 8) {
+        $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
+        $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
+        $findDisplayField = function ($table) {
+            $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_NAME IN ('name','title') limit 1", $table);
+            if ($field) {
                 return $field;
-            };
-            foreach (array_unique($references) as $otherTable) {
-                echo '<label>Display field for related table "' . $otherTable . '"</label><br>';
-                echo '<select name="displayFields[' . $otherTable . ']">';
-                $foundDisplayField = $findDisplayField($otherTable);
-                foreach ($columnNames as $option) {
-                    if ($displayFields[$otherTable] ?? false) {
-                        $selected = $option == $displayFields[$otherTable] ? 'selected' : '';
-                    } else {
-                        $selected = $option == $foundDisplayField ? 'selected' : '';
-                    }
-                    echo '<option value="' . $option . '" ' . $selected . '>' . $option . '</option>';
+            }
+            $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
+            if ($field) {
+                return $field;
+            }
+            $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? limit 1", $table);
+            return $field;
+        };
+        foreach (array_unique($references) as $otherTable) {
+            echo '<label>Display field for related table "' . $otherTable . '"</label><br>';
+            echo '<select name="displayFields[' . $otherTable . ']">';
+            $foundDisplayField = $findDisplayField($otherTable);
+            foreach ($columnNames as $option) {
+                if ($displayFields[$otherTable] ?? false) {
+                    $selected = $option == $displayFields[$otherTable] ? 'selected' : '';
+                } else {
+                    $selected = $option == $foundDisplayField ? 'selected' : '';
                 }
-                echo '</select><br>';
+                echo '<option value="' . $option . '" ' . $selected . '>' . $option . '</option>';
             }
-        } elseif ($step > 8) {
-            $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
-            echo '<label>Display fields for related tables "' . implode(', ', array_unique($references)) . '"</label><br>';
-            echo '<div style="padding: 4px 1px;">' . implode(', ', array_filter($displayFields)) . '</div>';
-            foreach ($displayFields as $columnName => $displayField) {
-                echo '<input type="hidden" name="displayFields[' . $columnName . ']" value="' . $displayField . '">';
-            }
+            echo '</select><br>';
+        }
+    } elseif ($step > 8) {
+        $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
+        echo '<label>Display fields for related tables "' . implode(', ', array_unique($references)) . '"</label><br>';
+        echo '<div style="padding: 4px 1px;">' . implode(', ', array_filter($displayFields)) . '</div>';
+        foreach ($displayFields as $columnName => $displayField) {
+            echo '<input type="hidden" name="displayFields[' . $columnName . ']" value="' . $displayField . '">';
         }
     }
     echo '<p>Step ' . $step . '/' . $steps . '</p>';
