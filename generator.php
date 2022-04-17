@@ -7,18 +7,24 @@ require 'config/config.php';
 use MintyPHP\DB;
 
 $data = $_GET + $_POST;
-$table = $data['table'] ?? false;
-$directory = $data['directory'] ?? false;
-$skeleton = $data['skeleton'] ?? false;
-$template = $data['template'] ?? false;
-$singular = $data['singular'] ?? false;
-$plural = $data['plural'] ?? false;
-$fieldNames = $data['fieldNames'] ?? [];
-$displayFields = $data['displayFields'] ?? [];
+$steps = 4;
+$step = $data['step'] ?? 1;
+$table = $data['table'] ?? '';
 
-if (file_exists("skel/config/$table.json")) {
-    $defaults = json_decode(file_get_contents("skel/config/$table.json"), true);
+if ($step > 1 && file_exists("skel/config/$table.json")) {
+    $previous = json_decode(file_get_contents("skel/config/$table.json"), true);
+} else {
+    $previous = [];
 }
+
+$directory = $data['directory'] ?? ($previous['directory'] ?? '');
+$skeleton = $data['skeleton'] ?? ($previous['skeleton'] ?? '');
+$template = $data['template'] ?? ($previous['template'] ?? '');
+$singular = $data['singular'] ?? ($previous['singular'] ?? '');
+$plural = $data['plural'] ?? ($previous['plural'] ?? '');
+$fieldNames = $data['fieldNames'] ?? ($previous['fieldNames'] ?? []);
+$displayFields = $data['displayFields'] ?? ($previous['displayFields'] ?? []);
+
 
 function readdirs($directory, $entries_array = array())
 {
@@ -54,7 +60,10 @@ $camelize = function ($word) {
     }, $word);
 };
 
-if (!$table) {
+echo '<h1>Generator</h1>';
+echo '<p>Step ' . $step . '/' . $steps . '</p>';
+
+if ($step == 1) {
     echo '<form method="get">';
     echo '<label>Table</label><br>';
     echo '<select name="table">';
@@ -64,35 +73,33 @@ if (!$table) {
         echo '<option value="' . $option . '">' . $exists .  $option  . '</option>';
     }
     echo '</select><br>';
+    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
     echo '<input type="submit" value="Next">';
     echo '</form>';
-} elseif (!$directory) {
+} elseif ($step == 2) {
     echo '<form method="get">';
     echo '<label>Table</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?">' . $table . '</a></div>';
+    echo '<div style="padding: 4px 1px;"><a href="?step=1">' . $table . '</a></div>';
     echo '<input type="hidden" name="table" value="' . $table . '">';
     echo '<label>Directory</label><br>';
     $options = readdirs('pages', ['pages']);
     sort($options);
     echo '<select name="directory">';
     foreach ($options as $option) {
-        if ($directory) {
-            $selected = $option == $directory ? 'selected' : '';
-        } else {
-            $selected = $option == $defaults['directory'] ? 'selected' : '';
-        }
+        $selected = $option == $directory ? 'selected' : '';
         echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
     }
     echo '</select><br>';
+    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
     echo '<input type="submit" value="Next">';
     echo '</form>';
-} elseif (!$skeleton) {
+} elseif ($step == 3) {
     echo '<form method="get">';
     echo '<label>Table</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?">' . $table . '</a></div>';
+    echo '<div style="padding: 4px 1px;"><a href="?step=1">' . $table . '</a></div>';
     echo '<input type="hidden" name="table" value="' . $table . '">';
     echo '<label>Directory</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '">' . $directory . '</a></div>';
+    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '&step=2">' . $directory . '</a></div>';
     echo '<input type="hidden" name="directory" value="' . $directory . '">';
     echo '<label>Skeleton</label><br>';
     if (!file_exists("skel/default")) {
@@ -110,28 +117,25 @@ if (!$table) {
             continue;
         }
         $option = substr($filename, strpos($filename, '/') + 1);
-        if ($skeleton) {
-            $selected = $option == $skeleton ? 'selected' : '';
-        } else {
-            $selected = $option == $defaults['skeleton'] ? 'selected' : '';
-        }
+        $selected = $option == $skeleton ? 'selected' : '';
         echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
     }
     echo '</select><br>';
+    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
     echo '<input type="submit" value="Next">';
     echo '</form>';
-} elseif (!$template || $_SERVER['REQUEST_METHOD'] != 'POST') {
+} elseif ($step == 4) {
     $singular = $singular ?: $singularize($humanize($table));
     $plural = $plural ?: $pluralize($humanize($table));
     echo '<form method="post">';
     echo '<label>Table</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?">' . $table . '</a></div>';
+    echo '<div style="padding: 4px 1px;"><a href="?step=1">' . $table . '</a></div>';
     echo '<input type="hidden" name="table" value="' . $table . '">';
     echo '<label>Directory</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '">' . $directory . '</a></div>';
+    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '&step=2">' . $directory . '</a></div>';
     echo '<input type="hidden" name="directory" value="' . $directory . '">';
     echo '<label>Skeleton</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '&directory=' . urlencode($directory) . '">' . $skeleton . '</a></div>';
+    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '&directory=' . urlencode($directory) . '&step=3">' . $skeleton . '</a></div>';
     echo '<input type="hidden" name="skeleton" value="' . $skeleton . '">';
     echo '<label>Template</label><br>';
     $filenames = glob("templates/*.phtml");
@@ -190,9 +194,10 @@ if (!$table) {
         }
         echo '</select><br>';
     }
+    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
     echo '<input type="submit" value="Next">';
     echo '</form>';
-} else {
+} elseif ($step == 5) {
     if (!file_exists("skel/config")) {
         mkdir("skel/config", 0755, true);
     }
