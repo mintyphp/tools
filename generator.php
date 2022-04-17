@@ -8,11 +8,6 @@ use MintyPHP\DB;
 
 $data = $_GET + $_POST;
 $table = $data['table'] ?? false;
-if ($table && file_exists("skel/config/$table.json")) {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-        $data = json_decode(file_get_contents("skel/config/$table.json"), true);
-    }
-}
 $directory = $data['directory'] ?? false;
 $skeleton = $data['skeleton'] ?? false;
 $template = $data['template'] ?? false;
@@ -20,6 +15,10 @@ $singular = $data['singular'] ?? false;
 $plural = $data['plural'] ?? false;
 $fieldNames = $data['fieldNames'] ?? [];
 $displayFields = $data['displayFields'] ?? [];
+
+if (file_exists("skel/config/$table.json")) {
+    $defaults = json_decode(file_get_contents("skel/config/$table.json"), true);
+}
 
 function readdirs($directory, $entries_array = array())
 {
@@ -59,11 +58,10 @@ if (!$table) {
     echo '<form method="get">';
     echo '<label>Table</label><br>';
     echo '<select name="table">';
-    $entities = DB::select('SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` = ? ORDER BY `TABLE_NAME`;', DB::$database);
-    foreach ($entities as $entity) {
-        $table = $entity['TABLES']['TABLE_NAME'];
-        $exists = file_exists("skel/config/$table.json") ? '*' : '';
-        echo '<option value="' . $table . '">' . $exists .  $table  . '</option>';
+    $options = DB::selectValues('SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` = ? ORDER BY `TABLE_NAME`;', DB::$database);
+    foreach ($options as $option) {
+        $exists = file_exists("skel/config/$option.json") ? '*' : '';
+        echo '<option value="' . $option . '">' . $exists .  $option  . '</option>';
     }
     echo '</select><br>';
     echo '<input type="submit" value="Next">';
@@ -74,11 +72,16 @@ if (!$table) {
     echo '<div style="padding: 4px 1px;"><a href="?">' . $table . '</a></div>';
     echo '<input type="hidden" name="table" value="' . $table . '">';
     echo '<label>Directory</label><br>';
-    $dirs = readdirs('pages', ['pages']);
-    sort($dirs);
+    $options = readdirs('pages', ['pages']);
+    sort($options);
     echo '<select name="directory">';
-    foreach ($dirs as $dir) {
-        echo '<option value="' . $dir . '">' . $dir . '</option>';
+    foreach ($options as $option) {
+        if ($directory) {
+            $selected = $option == $directory ? 'selected' : '';
+        } else {
+            $selected = $option == $defaults['directory'] ? 'selected' : '';
+        }
+        echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
     }
     echo '</select><br>';
     echo '<input type="submit" value="Next">';
@@ -103,8 +106,16 @@ if (!$table) {
     $filenames = glob("skel/*");
     echo '<select name="skeleton">';
     foreach ($filenames as $filename) {
-        $skeleton = substr($filename, strpos($filename, '/') + 1);
-        echo '<option value="' . $skeleton . '">' . $skeleton . '</option>';
+        if ($filename == 'skel/config') {
+            continue;
+        }
+        $option = substr($filename, strpos($filename, '/') + 1);
+        if ($skeleton) {
+            $selected = $option == $skeleton ? 'selected' : '';
+        } else {
+            $selected = $option == $defaults['skeleton'] ? 'selected' : '';
+        }
+        echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
     }
     echo '</select><br>';
     echo '<input type="submit" value="Next">';
