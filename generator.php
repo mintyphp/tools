@@ -6,8 +6,8 @@ require 'config/config.php';
 
 use MintyPHP\DB;
 
-$data = $_GET + $_POST;
-$steps = 4;
+$data = $_POST + $_GET;
+$steps = 9;
 $step = $data['step'] ?? 1;
 $table = $data['table'] ?? '';
 
@@ -23,6 +23,7 @@ $template = $data['template'] ?? ($previous['template'] ?? '');
 $singular = $data['singular'] ?? ($previous['singular'] ?? '');
 $plural = $data['plural'] ?? ($previous['plural'] ?? '');
 $fieldNames = $data['fieldNames'] ?? ($previous['fieldNames'] ?? []);
+$listFields = $data['listFields'] ?? ($previous['listFields'] ?? []);
 $displayFields = $data['displayFields'] ?? ($previous['displayFields'] ?? []);
 
 
@@ -63,141 +64,174 @@ $camelize = function ($word) {
 echo '<h1>Generator</h1>';
 echo '<p>Step ' . $step . '/' . $steps . '</p>';
 
-if ($step == 1) {
-    echo '<form method="get">';
-    echo '<label>Table</label><br>';
-    echo '<select name="table">';
-    $options = DB::selectValues('SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` = ? ORDER BY `TABLE_NAME`;', DB::$database);
-    foreach ($options as $option) {
-        $exists = file_exists("skel/config/$option.json") ? '*' : '';
-        echo '<option value="' . $option . '">' . $exists .  $option  . '</option>';
-    }
-    echo '</select><br>';
-    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
-    echo '<input type="submit" value="Next">';
-    echo '</form>';
-} elseif ($step == 2) {
-    echo '<form method="get">';
-    echo '<label>Table</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?step=1">' . $table . '</a></div>';
-    echo '<input type="hidden" name="table" value="' . $table . '">';
-    echo '<label>Directory</label><br>';
-    $options = readdirs('pages', ['pages']);
-    sort($options);
-    echo '<select name="directory">';
-    foreach ($options as $option) {
-        $selected = $option == $directory ? 'selected' : '';
-        echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
-    }
-    echo '</select><br>';
-    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
-    echo '<input type="submit" value="Next">';
-    echo '</form>';
-} elseif ($step == 3) {
-    echo '<form method="get">';
-    echo '<label>Table</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?step=1">' . $table . '</a></div>';
-    echo '<input type="hidden" name="table" value="' . $table . '">';
-    echo '<label>Directory</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '&step=2">' . $directory . '</a></div>';
-    echo '<input type="hidden" name="directory" value="' . $directory . '">';
-    echo '<label>Skeleton</label><br>';
-    if (!file_exists("skel/default")) {
-        mkdir("skel/default", 0755, true);
-        $filenames = glob(__DIR__ . "/skel/pages/*");
-        foreach ($filenames as $filename) {
-            $basename = basename($filename);
-            copy($filename, "skel/default/$basename");
-        }
-    }
-    $filenames = glob("skel/*");
-    echo '<select name="skeleton">';
-    foreach ($filenames as $filename) {
-        if ($filename == 'skel/config') {
-            continue;
-        }
-        $option = substr($filename, strpos($filename, '/') + 1);
-        $selected = $option == $skeleton ? 'selected' : '';
-        echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
-    }
-    echo '</select><br>';
-    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
-    echo '<input type="submit" value="Next">';
-    echo '</form>';
-} elseif ($step == 4) {
-    $singular = $singular ?: $singularize($humanize($table));
-    $plural = $plural ?: $pluralize($humanize($table));
+if ($step < $steps) {
     echo '<form method="post">';
-    echo '<label>Table</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?step=1">' . $table . '</a></div>';
-    echo '<input type="hidden" name="table" value="' . $table . '">';
-    echo '<label>Directory</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '&step=2">' . $directory . '</a></div>';
-    echo '<input type="hidden" name="directory" value="' . $directory . '">';
-    echo '<label>Skeleton</label><br>';
-    echo '<div style="padding: 4px 1px;"><a href="?table=' . urlencode($table) . '&directory=' . urlencode($directory) . '&step=3">' . $skeleton . '</a></div>';
-    echo '<input type="hidden" name="skeleton" value="' . $skeleton . '">';
-    echo '<label>Template</label><br>';
-    $filenames = glob("templates/*.phtml");
-    echo '<select name="template">';
-    foreach ($filenames as $filename) {
-        $begin = strpos($filename, '/') + 1;
-        $option = substr($filename, $begin, strrpos($filename, '.') - $begin);
-        if ($template) {
-            $selected = $option == $template;
-        } else {
-            $selected = in_array($option, explode('/', $directory)) ? 'selected' : '';
-        }
-        echo '<option value="' . $option . '" ' . $selected . '>' . $option . '</option>';
-    }
-    echo '</select><br>';
-    echo '<label>Table name singular for "' . $table . '"</label><br>';
-    echo '<input type="text" name="singular" value="' . $singular . '"><br>';
-    echo '<label>Table name plular for "' . $table . '"</label><br>';
-    echo '<input type="text" name="plural" value="' . $plural . '"><br>';
-    $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
-    $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
-    foreach ($columnNames as $columnName) {
-        $reference = $references[$columnName] ?? '';
-        echo '<label>Column name for "' . $columnName . '"' . ($reference ? " ($reference)" : '') . '</label><br>';
-        if ($fieldNames[$columnName] ?? false) {
-            $value = $fieldNames[$columnName];
-        } else {
-            $value = $reference ? preg_replace('/_id$/', '', $columnName) : $columnName;
-        }
-        echo '<input type="text" name="fieldNames[' . $columnName . ']" value="' . $value . '"><br>';
-    }
-    $findDisplayField = function ($table) {
-        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_NAME IN ('name','title') limit 1", $table);
-        if ($field) {
-            return $field;
-        }
-        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
-        if ($field) {
-            return $field;
-        }
-        $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? limit 1", $table);
-        return $field;
-    };
-    foreach (array_unique($references) as $otherTable) {
-        $options = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and table_name = ?", $otherTable);
-        echo '<label>Display field for table "' . $otherTable . '"</label><br>';
-        echo '<select name="displayFields[' . $otherTable . ']">';
-        $foundDisplayField = $findDisplayField($otherTable);
+    if ($step == 1) {
+        echo '<label>Table</label><br>';
+        echo '<select name="table">';
+        $options = DB::selectValues('SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` = ? ORDER BY `TABLE_NAME`;', DB::$database);
         foreach ($options as $option) {
-            if ($displayFields[$otherTable] ?? false) {
-                $selected = $option == $displayFields[$otherTable] ? 'selected' : '';
+            $exists = file_exists("skel/config/$option.json") ? '*' : '';
+            echo '<option value="' . $option . '">' . $exists .  $option  . '</option>';
+        }
+        echo '</select><br>';
+    } elseif ($step > 1) {
+        echo '<label>Table</label><br>';
+        echo '<div style="padding: 4px 1px;">' . $table . '</div>';
+        echo '<input type="hidden" name="table" value="' . $table . '">';
+    }
+    if ($step == 2) {
+        echo '<label>Directory</label><br>';
+        $options = readdirs('pages', ['pages']);
+        sort($options);
+        echo '<select name="directory">';
+        foreach ($options as $option) {
+            $selected = $option == $directory ? 'selected' : '';
+            echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
+        }
+        echo '</select><br>';
+    } elseif ($step > 2) {
+        echo '<label>Directory</label><br>';
+        echo '<div style="padding: 4px 1px;">' . $directory . '</div>';
+        echo '<input type="hidden" name="directory" value="' . $directory . '">';
+    }
+    if ($step == 3) {
+        echo '<label>Skeleton</label><br>';
+        if (!file_exists("skel/default")) {
+            mkdir("skel/default", 0755, true);
+            $filenames = glob(__DIR__ . "/skel/pages/*");
+            foreach ($filenames as $filename) {
+                $basename = basename($filename);
+                copy($filename, "skel/default/$basename");
+            }
+        }
+        $filenames = glob("skel/*");
+        echo '<select name="skeleton">';
+        foreach ($filenames as $filename) {
+            if ($filename == 'skel/config') {
+                continue;
+            }
+            $option = substr($filename, strpos($filename, '/') + 1);
+            $selected = $option == $skeleton ? 'selected' : '';
+            echo '<option value="' . $option . '"' . $selected . '>' . $option . '</option>';
+        }
+        echo '</select><br>';
+    } elseif ($step > 3) {
+        echo '<label>Skeleton</label><br>';
+        echo '<div style="padding: 4px 1px;">' . $skeleton . '</div>';
+        echo '<input type="hidden" name="skeleton" value="' . $skeleton . '">';
+    }
+    if ($step == 4) {
+        echo '<label>Template</label><br>';
+        $filenames = glob("templates/*.phtml");
+        echo '<select name="template">';
+        foreach ($filenames as $filename) {
+            $begin = strpos($filename, '/') + 1;
+            $option = substr($filename, $begin, strrpos($filename, '.') - $begin);
+            if ($template) {
+                $selected = $option == $template;
             } else {
-                $selected = $option == $foundDisplayField ? 'selected' : '';
+                $selected = in_array($option, explode('/', $directory)) ? 'selected' : '';
             }
             echo '<option value="' . $option . '" ' . $selected . '>' . $option . '</option>';
         }
         echo '</select><br>';
+    } elseif ($step > 4) {
+        echo '<label>Template</label><br>';
+        echo '<div style="padding: 4px 1px;">' . $template . '</div>';
+        echo '<input type="hidden" name="template" value="' . $template . '">';
     }
-    echo '<input type="hidden" name="step" value="' . ($step + 1) . '"><br>';
-    echo '<input type="submit" value="Next">';
+    if ($step == 5) {
+        $singular = $singular ?: $singularize($humanize($table));
+        echo '<label>Table name singular for "' . $table . '"</label><br>';
+        echo '<input type="text" name="singular" value="' . $singular . '"><br>';
+        $plural = $plural ?: $pluralize($humanize($table));
+        echo '<label>Table name plular for "' . $table . '"</label><br>';
+        echo '<input type="text" name="plural" value="' . $plural . '"><br>';
+    } elseif ($step > 5) {
+        echo '<label>Table name (singular/plural) for "' . $table . '"</label><br>';
+        echo '<div style="padding: 4px 1px;">' . $singular . ' / ' . $plural . '</div>';
+        echo '<input type="hidden" name="singular" value="' . $singular . '">';
+        echo '<input type="hidden" name="plural" value="' . $plural . '">';
+    }
+    if ($step == 6) {
+        $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
+        $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
+        foreach ($columnNames as $columnName) {
+            $reference = $references[$columnName] ?? '';
+            echo '<label>Column name for "' . $columnName . '"' . ($reference ? " ($reference)" : '') . '</label><br>';
+            if ($fieldNames[$columnName] ?? false) {
+                $value = $fieldNames[$columnName];
+            } else {
+                $value = $reference ? preg_replace('/_id$/', '', $columnName) : $columnName;
+            }
+            echo '<input type="text" name="fieldNames[' . $columnName . ']" value="' . $value . '"><br>';
+        }
+    } elseif ($step > 6) { {
+            echo '<label>Column names for "' . $singular . '"</label><br>';
+            echo '<div style="padding: 4px 1px;">' . implode(', ', $fieldNames) . '</div>';
+            foreach ($fieldNames as $columnName => $fieldName) {
+                echo '<input type="hidden" name="fieldNames[' . $columnName . ']" value="' . $fieldName . '">';
+            }
+        }
+        if ($step == 7) {
+            echo '<label>List columns for "' . $singular . '"</label><br>';
+            $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
+            if (!$listFields) {
+                foreach ($columnNames as $i => $columnName) {
+                    $listFields[$columnName] = $i < 4 ? 1 : 0;
+                }
+            }
+            foreach ($columnNames as $columnName) {
+                $checked = ($listFields[$columnName] ?? false) ? ' checked' : '';
+                echo '<input type="checkbox" name="listFields[' . $columnName . ']"' . $checked . '>' . $columnName . '<br>';
+            }
+        } elseif ($step > 7) {
+            echo '<label>List columns for "' . $singular . '"</label><br>';
+            echo '<div style="padding: 4px 1px;">' . implode(', ', array_keys(array_filter($listFields))) . '</div>';
+            foreach ($listFields as $columnName => $visible) {
+                echo '<input type="hidden" name="fieldNames[' . $columnName . ']" value="' . ($visible ? 1 : 0) . '">';
+            }
+        }
+        if ($step == 8) {
+            $findDisplayField = function ($table) {
+                $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_NAME IN ('name','title') limit 1", $table);
+                if ($field) {
+                    return $field;
+                }
+                $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_KEY = 'UNI' limit 1 ", $table);
+                if ($field) {
+                    return $field;
+                }
+                $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? limit 1", $table);
+                return $field;
+            };
+            foreach (array_unique($references) as $otherTable) {
+                echo '<label>Display field for related table "' . $otherTable . '"</label><br>';
+                echo '<select name="displayFields[' . $otherTable . ']">';
+                $foundDisplayField = $findDisplayField($otherTable);
+                foreach ($columnNames as $option) {
+                    if ($displayFields[$otherTable] ?? false) {
+                        $selected = $option == $displayFields[$otherTable] ? 'selected' : '';
+                    } else {
+                        $selected = $option == $foundDisplayField ? 'selected' : '';
+                    }
+                    echo '<option value="' . $option . '" ' . $selected . '>' . $option . '</option>';
+                }
+                echo '</select><br>';
+            }
+        } elseif ($step > 8) {
+            echo '<label>Display fields for related tables "' . implode(', ', array_unique($references)) . '"</label><br>';
+            echo '<div style="padding: 4px 1px;">' . implode(', ', array_filter($displayFields)) . '</div>';
+            foreach ($displayFields as $columnName => $displayField) {
+                echo '<input type="hidden" name="displayFields[' . $columnName . ']" value="' . $displayField . '">';
+            }
+        }
+    }
+    echo '<br><input type="submit" value="Next">';
+    echo '<input type="hidden" name="step" value="' . ($step + 1)  . '">';
     echo '</form>';
-} elseif ($step == 5) {
+} else {
     if (!file_exists("skel/config")) {
         mkdir("skel/config", 0755, true);
     }
