@@ -6,8 +6,11 @@ require 'config/config.php';
 
 use MintyPHP\DB;
 
-$data = $_POST + $_GET;
-$steps = 9;
+$data = $_POST;
+if (isset($data['listFields'])) {
+    $data['listFields'] = array_keys($data['listFields']);
+}
+$steps = 10;
 $step = $data['step'] ?? 1;
 $table = $data['table'] ?? '';
 
@@ -25,7 +28,6 @@ $plural = $data['plural'] ?? ($previous['plural'] ?? '');
 $fieldNames = $data['fieldNames'] ?? ($previous['fieldNames'] ?? []);
 $listFields = $data['listFields'] ?? ($previous['listFields'] ?? []);
 $displayFields = $data['displayFields'] ?? ($previous['displayFields'] ?? []);
-
 
 function readdirs($directory, $entries_array = array())
 {
@@ -182,17 +184,22 @@ if ($step < $steps) {
                 }
             }
             foreach ($columnNames as $columnName) {
-                $checked = ($listFields[$columnName] ?? false) ? ' checked' : '';
-                echo '<input type="checkbox" name="listFields[' . $columnName . ']"' . $checked . '>' . $columnName . '<br>';
+                $checked = in_array($columnName, $listFields) ? ' checked' : '';
+                echo '<input type="checkbox" name="listFields[' . $columnName . ']"' . $checked . '>' . $fieldNames[$columnName] . '<br>';
             }
         } elseif ($step > 7) {
             echo '<label>List columns for "' . $singular . '"</label><br>';
-            echo '<div style="padding: 4px 1px;">' . implode(', ', array_keys(array_filter($listFields))) . '</div>';
-            foreach ($listFields as $columnName => $visible) {
-                echo '<input type="hidden" name="fieldNames[' . $columnName . ']" value="' . ($visible ? 1 : 0) . '">';
+            $listFieldNames = array_map(function ($v) use ($fieldNames) {
+                return $fieldNames[$v];
+            }, $listFields);
+            echo '<div style="padding: 4px 1px;">' . implode(', ', $listFieldNames) . '</div>';
+            foreach ($listFields as $columnName) {
+                echo '<input type="hidden" name="listFields[' . $columnName . ']" value="1">';
             }
         }
         if ($step == 8) {
+            $columnNames = DB::selectValues("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ?", $table);
+            $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
             $findDisplayField = function ($table) {
                 $field = DB::selectValue("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() and EXTRA != 'auto_increment' and TABLE_NAME = ? and COLUMN_NAME IN ('name','title') limit 1", $table);
                 if ($field) {
@@ -220,6 +227,7 @@ if ($step < $steps) {
                 echo '</select><br>';
             }
         } elseif ($step > 8) {
+            $references = DB::selectPairs("SELECT COLUMN_NAME, REFERENCED_TABLE_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where REFERENCED_TABLE_NAME is not null and TABLE_SCHEMA=DATABASE() AND TABLE_NAME = ?", $table);
             echo '<label>Display fields for related tables "' . implode(', ', array_unique($references)) . '"</label><br>';
             echo '<div style="padding: 4px 1px;">' . implode(', ', array_filter($displayFields)) . '</div>';
             foreach ($displayFields as $columnName => $displayField) {
