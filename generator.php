@@ -62,7 +62,6 @@ $camelize = function ($word) {
 };
 
 echo '<h1>Generator</h1>';
-echo '<p>Step ' . $step . '/' . $steps . '</p>';
 
 if ($step < $steps) {
     echo '<form method="post">';
@@ -228,7 +227,9 @@ if ($step < $steps) {
             }
         }
     }
-    echo '<br><input type="submit" value="Next">';
+    echo '<p>Step ' . $step . '/' . $steps . '</p>';
+    echo '<input type="button" value="Back" onclick="var form=document.forms[0]; form.elements[\'step\'].value=' . ($step - 1) . '; form.submit();">';
+    echo '<input type="submit" value="Next">';
     echo '<input type="hidden" name="step" value="' . ($step + 1)  . '">';
     echo '</form>';
 } else {
