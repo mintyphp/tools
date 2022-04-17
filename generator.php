@@ -12,6 +12,7 @@ if (isset($data['listFields'])) {
 }
 $steps = 10;
 $step = $data['step'] ?? 1;
+unset($data['step']);
 $table = $data['table'] ?? '';
 
 if ($step > 1 && file_exists("skel/config/$table.json")) {
