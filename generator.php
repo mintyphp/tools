@@ -18,7 +18,6 @@ $table = $data['table'] ?? '';
 if ($step > 1 && file_exists("skel/config/$table.json")) {
     $previous = json_decode(file_get_contents("skel/config/$table.json"), true);
 } else {
-<<<<<<< HEAD
     $previous = [];
 }
 
@@ -64,31 +63,6 @@ $camelize = function ($word) {
         return strtolower($matches[0]);
     }, $word);
 };
-=======
-    foreach ($tables as $table) {
-        $path = 'admin2';
-        $pages = array(
-            'index().php',
-            'index(admin).phtml',
-            'add().php',
-            'add(admin).phtml',
-            'edit($id).php',
-            'edit(admin).phtml',
-            'delete($id).php',
-            'delete(admin).phtml',
-            'view($id).php',
-            'view(admin).phtml',
-        );
-        $camelize = function ($v) {
-            return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $v))));
-        };
-        $humanize = function ($v) {
-            return str_replace('_', ' ', $v);
-        };
-        $singularize = function ($v) {
-            return rtrim($v, 's');
-        };
->>>>>>> master
 
 echo '<h1>Generator</h1>';
 
