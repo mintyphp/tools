@@ -7,26 +7,24 @@ use MintyPHP\Session;
 <h1>Add <?php echo ucfirst($singular); ?></h1>
 
 <form method="post">
-	<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME'];
-		$optional = $field['IS_NULLABLE'];
-		$referencedTable = $references[$column] ?? false; ?>
+<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; $optional = $field['IS_NULLABLE']; $referencedTable = $references[$column] ?? false; ?>
 
-		<div class="form-group <?php echo $optional ? 'optional ' : ''; ?><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?'has-error':''); ?>">
-			<?php if ($referencedTable) : ?>
-				<label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($fieldNames[$column]); ?></label>
-				<select class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" id="<?php echo $table; ?>[<?php echo $column; ?>]" <?php echo $optional ? '' : ' required'; ?>>
-					<option value="" <?php echo '<?php' ?> e(''==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>>...</option>
-	        		<?php echo '<?php' ?> foreach ($<?php echo $camelize($referencedTable); ?> as $key => $value): ?>
-	            		<option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data[' <?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
-	        		<?php echo '<?php' ?> endforeach; ?>
-	    		</select>
-			<?php else : ?>
-        		<label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($humanize($column)); ?></label>
-        		<input class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" type="text" value="<?php echo '<?php' ?> e($data[' <?php echo $table; ?>']['<?php echo $column; ?>']); ?>" id="<?php echo $table; ?>[<?php echo $column; ?>]" />
-			<?php endif; ?>
-			<span class="help-block"><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?$errors['<?php echo $table; ?>[<?php echo $column; ?>]']:''); ?></span>
-		</div>
-	<?php endforeach; ?>
+	<div class="form-group <?php echo $optional ? 'optional ' : ''; ?><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?'has-error':''); ?>">
+<?php if ($referencedTable) : ?>
+		<label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($fieldNames[$column]); ?></label>
+		<select class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" id="<?php echo $table; ?>[<?php echo $column; ?>]" <?php echo $optional ? '' : ' required'; ?>>
+			<option value="" <?php echo '<?php' ?> e(''==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>>...</option>
+			<?php echo '<?php' ?> foreach ($<?php echo $camelize($referencedTable); ?> as $key => $value): ?>
+				<option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data[' <?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
+			<?php echo '<?php' ?> endforeach; ?>
+		</select>
+<?php else : ?>
+		<label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($humanize($column)); ?></label>
+		<input class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" type="text" value="<?php echo '<?php' ?> e($data[' <?php echo $table; ?>']['<?php echo $column; ?>']); ?>" id="<?php echo $table; ?>[<?php echo $column; ?>]" />
+<?php endif; ?>
+		<span class="help-block"><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?$errors['<?php echo $table; ?>[<?php echo $column; ?>]']:''); ?></span>
+	</div>
+<?php endforeach; ?>
 
 	<div class="form-group">
 		<button class="button" type="submit">Save</button>

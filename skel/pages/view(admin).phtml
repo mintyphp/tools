@@ -2,16 +2,16 @@
 	<h1>View <?php echo ucfirst($singular); ?></h1>
 </div>
 <div>
-	<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; ?>
-		<dl>
-			<dt><?php echo ucfirst($fieldNames[$column]); ?></dt>
-			<?php if (isset($references[$column])) : $referencedTable = $references[$column]; ?>
-				<dd><?php echo '<?php' ?> e($<?php echo $camelize($referencedTable); ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']]);?></dd>
-			<?php else : ?>
-				<dd><?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']);?></dd>
-			<?php endif; ?>
-		</dl>
-	<?php endforeach; ?>
+<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; ?>
+	<dl>
+		<dt><?php echo ucfirst($fieldNames[$column]); ?></dt>
+<?php if (isset($references[$column])) : $referencedTable = $references[$column]; ?>
+		<dd><?php echo '<?php' ?> e($<?php echo $camelize($referencedTable); ?>[$data['<?php echo $table; ?>']['<?php echo $column; ?>']]);?></dd>
+<?php else : ?>
+		<dd><?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']);?></dd>
+<?php endif; ?>
+	</dl>
+<?php endforeach; ?>
 </div>
 <p>
 	<a class="button" href="<?php echo $path; ?>/<?php echo $table; ?>/edit/<?php echo '<?php' ?> e($id); ?>">Edit</a>

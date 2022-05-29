@@ -7,8 +7,8 @@ use MintyPHP\Session;
 <h1>Delete <?php echo $singular; ?></h1>
 
 <form method="post">
-    <p>Are you sure?</p>
-    <button class="button" type="submit">Delete</button>
-    <a href="<?php echo $path; ?>/<?php echo $table; ?>/edit/<?php echo '<?php' ?> e($id); ?>">Cancel</a>
-    <?php echo '<?php' ?> Session::getCsrfInput(); ?>
+	<p>Are you sure?</p>
+	<button class="button" type="submit">Delete</button>
+	<a href="<?php echo $path; ?>/<?php echo $table; ?>/edit/<?php echo '<?php' ?> e($id); ?>">Cancel</a>
+	<?php echo '<?php' ?> Session::getCsrfInput(); ?>
 </form>
