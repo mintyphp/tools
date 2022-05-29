@@ -59,8 +59,8 @@ $pluralize = function ($v) {
     return rtrim($v, 's') . 's';
 };
 $camelize = function ($word) {
-    return preg_replace_callback('/_[a-z]/', function ($matches) {
-        return strtolower($matches[0]);
+    return preg_replace_callback('/_([a-z])/i', function ($matches) {
+        return strtoupper($matches[1]);
     }, $word);
 };
 
