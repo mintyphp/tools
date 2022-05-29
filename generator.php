@@ -33,8 +33,15 @@ if (!$tables) {
             'view($id).php',
             'view(admin).phtml',
         );
-        $humanize = function ($v) {return str_replace('_', ' ', $v);};
-        $singularize = function ($v) {return rtrim($v, 's');};
+        $camelize = function ($v) {
+            return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $v))));
+        };
+        $humanize = function ($v) {
+            return str_replace('_', ' ', $v);
+        };
+        $singularize = function ($v) {
+            return rtrim($v, 's');
+        };
 
         $fields = DB::select("SELECT * FROM information_schema.COLUMNS WHERE table_schema=DATABASE() and extra != 'auto_increment' and table_name = ?", $table);
         $belongsTo = DB::select("select * from information_schema.KEY_COLUMN_USAGE where referenced_table_name is not null and table_schema=DATABASE() AND table_name = ?", $table);
@@ -60,7 +67,6 @@ if (!$tables) {
                 if ($relation['KEY_COLUMN_USAGE']['COLUMN_NAME'] == $name) {
                     return $relation;
                 }
-
             }
             return false;
         };
