@@ -15,7 +15,7 @@ use MintyPHP\Session;
 		<select class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" id="<?php echo $table; ?>[<?php echo $column; ?>]" <?php echo $optional ? '' : ' required'; ?>>
 			<option value="" <?php echo '<?php' ?> e(''==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>>...</option>
 			<?php echo '<?php' ?> foreach ($<?php echo $camelize($referencedTable); ?> as $key => $value): ?>
-				<option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data[' <?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
+				<option value="<?php echo '<?php' ?> e($key); ?>"<?php echo '<?php' ?> e($key==$data['<?php echo $table; ?>']['<?php echo $column ?>']?' selected="selected"':''); ?>><?php echo '<?php' ?> e($value); ?></option>
 			<?php echo '<?php' ?> endforeach; ?>
 		</select>
 <?php else : ?>
