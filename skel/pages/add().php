@@ -16,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST') {
 		if ($id) {
 			Router::redirect('<?php echo $path; ?>/<?php echo $table; ?>/index');
 		}
-		$errors['db'] = '<?php echo ucfirst($singularize($humanize($table))); ?> not saved';
 	}
 } else {
 	$data = ['<?php echo $table; ?>' => [

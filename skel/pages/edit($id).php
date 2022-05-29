@@ -16,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST') {
 			Router::redirect('<?php echo $path; ?>/<?php echo $table; ?>/view/'.$id);
 		}
 	}
-	$errors['db'] = '<?php echo ucfirst($singularize($humanize($table))); ?> not saved';
 } else {
 	$data = DB::selectOne('SELECT * from `<?php echo $table; ?>` where `id` = ?', $id);
 }

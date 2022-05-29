@@ -7,5 +7,4 @@ if (!empty($_POST)) {
 	if ($rows) {
 		Router::redirect('<?php echo $path; ?>/<?php echo $table; ?>/index');
 	}
-	$errors['db'] = '<?php echo ucfirst($singularize($humanize($table))); ?> not deleted';
 }
