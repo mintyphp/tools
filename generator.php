@@ -223,10 +223,7 @@ if ($step < $steps) {
                 } else {
                     $selected = $option == $foundDisplayField ? 'selected' : '';
                 }
-<<<<<<< HEAD
                 echo '<option value="' . $option . '" ' . $selected . '>' . $option . '</option>';
-=======
->>>>>>> master
             }
             echo '</select><br>';
         }
