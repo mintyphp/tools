@@ -1,4 +1,4 @@
-<?php echo '<?php'."\n" ?>
+<?php echo '<?php' . "\n" ?>
 
 use MintyPHP\Session;
 
@@ -9,6 +9,6 @@ use MintyPHP\Session;
 <form method="post">
 	<p>Are you sure?</p>
 	<button class="button" type="submit">Delete</button>
-	<a href="<?php echo $path; ?>/<?php echo $table; ?>/edit/<?php echo '<?php' ?> e($id); ?>">Cancel</a>
+	<a href="<?php echo $path; ?>/<?php echo $table; ?>/view/<?php echo '<?php' ?> e($id); ?>">Cancel</a>
 	<?php echo '<?php' ?> Session::getCsrfInput(); ?>
 </form>
