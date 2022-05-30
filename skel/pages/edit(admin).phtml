@@ -19,7 +19,7 @@ use MintyPHP\Session;
 			<?php echo '<?php' ?> endforeach; ?>
 		</select>
 <?php else : ?>
-		<label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($humanize($column)); ?></label>
+		<label class="control-label" for="<?php echo $table; ?>[<?php echo $column; ?>]"><?php echo ucfirst($fieldNames[$column]); ?></label>
 		<input class="form-control" name="<?php echo $table; ?>[<?php echo $column; ?>]" type="text" value="<?php echo '<?php' ?> e($data['<?php echo $table; ?>']['<?php echo $column; ?>']); ?>" id="<?php echo $table; ?>[<?php echo $column; ?>]" />
 <?php endif; ?>
 		<span class="help-block"><?php echo '<?php' ?> e(isset($errors['<?php echo $table; ?>[<?php echo $column; ?>]'])?$errors['<?php echo $table; ?>[<?php echo $column; ?>]']:''); ?></span>
