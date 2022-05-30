@@ -14,12 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		$errors['<?php echo $table; ?>[<?php echo $column; ?>]'] = '<?php echo ucfirst($fieldNames[$column]); ?> not found';
 	}
 <?php endforeach;?>
-<?php foreach ($fields as $field): if (!$field['IS_NULLABLE']): $column = $field['COLUMN_NAME']; ?>
+<?php foreach ($fields as $field): if ($field['IS_NULLABLE']=="NO"): $column = $field['COLUMN_NAME']; ?>
 	if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) {
 		$errors['<?php echo $table; ?>[<?php echo $column; ?>]'] = '<?php echo ucfirst($fieldNames[$column]); ?> is required';
 	}
 <?php endif; endforeach;?>
-<?php foreach ($fields as $field): if ($field['IS_NULLABLE']): $column = $field['COLUMN_NAME']; ?>
+<?php foreach ($fields as $field): if ($field['IS_NULLABLE']=="YES"): $column = $field['COLUMN_NAME']; ?>
 	if (!$data['<?php echo $table; ?>']['<?php echo $column; ?>']) {
 		$data['<?php echo $table; ?>']['<?php echo $column; ?>'] = null;
 	}
