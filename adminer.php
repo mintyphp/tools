@@ -1,6 +1,9 @@
 <?php
+
+use MintyPHP\DB;
+
 // Use default autoload implementation
-require 'vendor/mintyphp/core/src/Loader.php';
+require 'vendor/autoload.php';
 // Load the config parameters
 require 'config/config.php';
 
@@ -8,10 +11,10 @@ require 'config/config.php';
 if (!isset($_GET["username"])) {
     $_POST["auth"] = array(
         'driver' => 'server',
-        'server' => \MintyPHP\Config\DB::$host . ':' . \MintyPHP\Config\DB::$port,
-        'username' => \MintyPHP\Config\DB::$username,
-        'password' => \MintyPHP\Config\DB::$password,
-        'db' => \MintyPHP\Config\DB::$database,
+        'server' => DB::$host . ':' . DB::$port,
+        'username' => DB::$username,
+        'password' => DB::$password,
+        'db' => DB::$database,
     );
 }
 
