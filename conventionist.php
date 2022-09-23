@@ -1,6 +1,9 @@
 <?php
+
+use MintyPHP\DB;
+
 // Use default autoload implementation
-require 'vendor/mintyphp/core/src/Loader.php';
+require 'vendor/autoload.php';
 // Load the config parameters
 require 'config/config.php';
 
