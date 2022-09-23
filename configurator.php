@@ -1,8 +1,11 @@
 <?php
+
+use MintyPHP\DB;
+
 // Use default autoload implementation
-require 'vendor/mintyphp/core/src/Loader.php';
+require 'vendor/autoload.php';
 // Load the config parameters
-$filename = 'config/config.php';
+require 'config/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $code = Configurator::loadCode($filename);
