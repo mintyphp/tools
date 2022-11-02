@@ -1,7 +1,5 @@
 <?php
 
-use MintyPHP\DB;
-
 // Use default autoload implementation
 require 'vendor/autoload.php';
 
