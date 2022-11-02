@@ -3,8 +3,8 @@ if (!defined('PHP_VERSION_ID')) {
     $version = explode('.', PHP_VERSION);
     define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
 }
-if (PHP_VERSION_ID < 50300) {
-    echo "ERROR: PHP 5.3 or higher required\n";
+if (PHP_VERSION_ID < 70000) {
+    echo "ERROR: PHP 7.0 or higher required\n";
     exit(1);
 }
 if (!function_exists('mysqli_connect')) {
