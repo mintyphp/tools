@@ -4,8 +4,8 @@ use MintyPHP\DB;
 
 // Use default autoload implementation
 require 'vendor/autoload.php';
-// Load the config parameters
-require 'config/config.php';
+
+$filename = 'config/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $code = Configurator::loadCode($filename);
@@ -56,7 +56,6 @@ class Configurator
         if (!file_exists($filename)) {
             throw new \Exception("Could not write: $filename");
         }
-
     }
 
     public static function mergePost($config, $post)
@@ -123,15 +122,16 @@ class Configurator
 
     public static function parseConfig($code)
     {
-        $config = array();
+        $config = [];
         $lines = preg_split("/\r?\n/", $code);
         foreach ($lines as $line) {
-            if (preg_match('/^\s*class ([a-z]+)/i', $line, $matches)) {
+            if (preg_match('/^\s*MintyPHP\\\([a-z]+)::\$([a-z]+)\s*=(.*);\s*(\/\/(.*))?$/i', $line, $matches)) {
                 $class = $matches[1];
-                $config[$class] = array();
-            } else if (preg_match('/^\s*public static \$([a-z]+)\s*=(.*);\s*(\/\/(.*))?$/i', $line, $matches)) {
-                $name = $matches[1];
-                $value = trim($matches[2]);
+                if (!isset($config[$class])) {
+                    $config[$class] = [];
+                }
+                $name = $matches[2];
+                $value = trim($matches[3]);
                 if (is_numeric($value) && strpos($value, '.') !== false) {
                     $value = (float) $value;
                 } else if (is_numeric($value)) {
@@ -142,8 +142,8 @@ class Configurator
                     $value = trim($value, '\'"');
                 }
 
-                if (isset($matches[4])) {
-                    $comment = trim($matches[4]);
+                if (isset($matches[5])) {
+                    $comment = trim($matches[5]);
                 } else {
                     $comment = false;
                 }
@@ -162,33 +162,28 @@ class Configurator
             } else {
                 return var_export($v['value'], true);
             }
-
         };
-        $code = "<?php\n";
-        $code .= "namespace MintyPHP\Config;\n";
+        $code = "<?php\n\n";
         foreach ($config as $class => $variables) {
-            $nameChars = $valueChars = 0;
+            $nameChars = 0;
             foreach ($variables as $v) {
                 $nameChars = max($nameChars, strlen($v['name']));
-                $valueChars = max($valueChars, strlen($export($v)));
             }
-            $code .= "\nclass $class\n{\n";
             foreach ($variables as $v) {
                 $name = sprintf("%-${nameChars}s", $v['name']);
-                $value = sprintf("%-${valueChars}s", $export($v));
-                $code .= "\tpublic static \$$name = $value;";
+                $value = sprintf("%s", $export($v));
+                $code .= "MintyPHP\\$class::\$$name = $value;";
                 if ($v['comment']) {
                     $code .= " // $v[comment]";
                 }
-
                 $code .= "\n";
             }
-            $code .= "}\n";
+            $code .= "\n";
         }
         return $code;
     }
 
-    public function testConfig(&$config)
+    public static function testConfig(&$config)
     {
         $parameters = array();
         foreach ($config as $class => &$variables) {
@@ -196,7 +191,7 @@ class Configurator
                 $parameters[$class . '_' . $v['name']] = &$v['value'];
             }
         }
-
+        mysqli_report(MYSQLI_REPORT_ERROR);
         $mysqli = new mysqli($parameters['DB_host'], $parameters['DB_username'], $parameters['DB_password']);
         if ($mysqli->connect_error) {
             echo "ERROR: MySQL connect: ($mysqli->connect_errno) $mysqli->connect_error\n";
