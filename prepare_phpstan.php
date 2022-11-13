@@ -15,6 +15,9 @@ function replaceFirstDocBlock(string $filename, array $variables): bool
 {
     $file = file_get_contents($filename);
     $docBlock = createDocBlock($variables);
+    if (!preg_match('|^\s*<\?php|s', $file)) {
+        $file = "<?php\n?>\n" . $file;
+    }
     $file = preg_replace('|<\?php(\s*/\*\*(.*?)\*/)?\s*|s', "<?php\n\n" . $docBlock, $file, 1);
     return file_put_contents($filename, $file) ? true : false;
 }
@@ -26,7 +29,7 @@ function getPathVariablesFromFilename(string $filename): array
     if (!preg_match('/^([^\(]*)\((.*)\).php$/', array_pop($path), $matches)) {
         return [];
     }
-    return array_fill_keys(explode(',', $matches[2]), 'string|null');
+    return array_fill_keys(array_filter(explode(',', $matches[2])), 'string|null');
 }
 
 function getViewVariablesFromFileContent(string $filename): array
@@ -40,7 +43,7 @@ function getViewVariablesFromFileContent(string $filename): array
     foreach ($tokens as $i => $current) {
         $next = $tokens[$i + 1] ?? '';
         if (is_array($current) && $current[0] == T_VARIABLE && $next == '=') {
-            $viewVariables[$current[1]] = 'array';
+            $viewVariables[$current[1]] = 'mixed|null';
         }
     }
     return $viewVariables;
@@ -68,7 +71,6 @@ function scanDirectories($glob)
             foreach ($viewFilenames as $viewFilename) {
                 replaceFirstDocBlock($viewFilename, $pathVariables + $viewVariables);
             }
-            die($filename);
         }
     }
 }
