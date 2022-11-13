@@ -41,8 +41,9 @@ function getViewVariablesFromFileContent(string $filename): array
         return $token[0] != T_WHITESPACE;
     }));
     foreach ($tokens as $i => $current) {
+        $previous = $tokens[$i - 1] ?? '';
         $next = $tokens[$i + 1] ?? '';
-        if (is_array($current) && $current[0] == T_VARIABLE && $next == '=') {
+        if (is_array($current) && $current[0] == T_VARIABLE && $next == '=' && ($previous[0] ?? 0) != T_DOUBLE_COLON) {
             $viewVariables[$current[1]] = 'mixed|null';
         }
     }
@@ -57,8 +58,18 @@ function getViewFilenamesFromFilename(string $filename): array
     return glob(substr($filename, 0, $start) . $action . '(*).phtml');
 }
 
+function getTemplateFilenameFromViewFilename(string $filename): string
+{
+    $start = strrpos($filename, '(') + 1;
+    $end = strpos($filename, ')', $start);
+    $template = substr($filename, $start, $end - $start);
+    $directory = str_replace('pages', 'templates', explode('/', $filename)[0]);
+    return "$directory/$template.php";
+}
+
 function scanDirectories($glob)
 {
+    $templateViews = [];
     $directories = glob($glob, GLOB_ONLYDIR);
     foreach ($directories as $directory) {
         scanDirectories("$directory/*");
@@ -69,7 +80,14 @@ function scanDirectories($glob)
             $viewVariables = getViewVariablesFromFileContent($filename);
             $viewFilenames = getViewFilenamesFromFilename($filename);
             foreach ($viewFilenames as $viewFilename) {
-                replaceFirstDocBlock($viewFilename, $pathVariables + $viewVariables);
+                $templateFilename = getTemplateFilenameFromViewFilename($viewFilename);
+                $templateViewFilename = preg_replace('|\.php$|', '.phtml', $templateFilename);
+                $templateVariables = file_exists($templateFilename) ? getViewVariablesFromFileContent($templateFilename) : [];
+                if ($templateVariables && !isset($templateViews[$templateViewFilename])) {
+                    replaceFirstDocBlock($templateViewFilename, $templateVariables);
+                    $templateViews[$templateViewFilename] = true;
+                }
+                replaceFirstDocBlock($viewFilename, $pathVariables + $viewVariables + $templateVariables);
             }
         }
     }
