@@ -82,9 +82,7 @@ function scanDirectories($glob)
             foreach ($viewFilenames as $viewFilename) {
                 $templateFilename = getTemplateFilenameFromViewFilename($viewFilename);
                 $templateViewFilename = preg_replace('|\.php$|', '.phtml', $templateFilename);
-                echo "$filename\t$templateFilename\n";
                 $templateVariables += file_exists($templateFilename) ? getViewVariablesFromFileContent($templateFilename) : [];
-                echo implode(',', array_keys($templateVariables)) . "\n";
                 if ($templateVariables && !isset($templateViews[$templateViewFilename])) {
                     replaceFirstDocBlock($templateViewFilename, $templateVariables);
                     $templateViews[$templateViewFilename] = true;
