@@ -76,19 +76,22 @@ function scanDirectories($glob)
         $filenames = glob("$directory/*(*).php");
         foreach ($filenames as $filename) {
             $pathVariables = getPathVariablesFromFilename($filename);
-            replaceFirstDocBlock($filename, $pathVariables);
             $viewVariables = getViewVariablesFromFileContent($filename);
             $viewFilenames = getViewFilenamesFromFilename($filename);
+            $templateVariables = [];
             foreach ($viewFilenames as $viewFilename) {
                 $templateFilename = getTemplateFilenameFromViewFilename($viewFilename);
                 $templateViewFilename = preg_replace('|\.php$|', '.phtml', $templateFilename);
-                $templateVariables = file_exists($templateFilename) ? getViewVariablesFromFileContent($templateFilename) : [];
+                echo "$filename\t$templateFilename\n";
+                $templateVariables += file_exists($templateFilename) ? getViewVariablesFromFileContent($templateFilename) : [];
+                echo implode(',', array_keys($templateVariables)) . "\n";
                 if ($templateVariables && !isset($templateViews[$templateViewFilename])) {
                     replaceFirstDocBlock($templateViewFilename, $templateVariables);
                     $templateViews[$templateViewFilename] = true;
                 }
                 replaceFirstDocBlock($viewFilename, $pathVariables + $viewVariables + $templateVariables);
             }
+            replaceFirstDocBlock($filename, $pathVariables + $templateVariables);
         }
     }
 }
