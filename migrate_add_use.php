@@ -7,7 +7,7 @@ function replaceUseBlock(string $filename, array $usedClasses): bool
     }, $usedClasses);
     $file = file_get_contents($filename);
     $oldUseStatements = [];
-    if (preg_match_all('/\nuse .*;/', $file, $matches)) {
+    if (preg_match_all('/\nuse [^;]*;/', $file, $matches)) {
         $oldUseStatements = $matches[0];
     }
     $allUseStatements = array_unique(array_merge($newUseStatements, $oldUseStatements));
