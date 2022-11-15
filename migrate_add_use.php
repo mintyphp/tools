@@ -5,7 +5,6 @@ function replaceUseBlock(string $filename, array $usedClasses): bool
     $newUseStatements = array_map(function ($class) {
         return "\nuse MintyPHP\\$class;";
     }, $usedClasses);
-    var_dump($newUseStatements);
     $file = file_get_contents($filename);
     $oldUseStatements = [];
     if (preg_match_all('/\nuse .*;/', $file, $matches)) {
