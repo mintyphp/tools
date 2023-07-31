@@ -276,10 +276,17 @@ if ($step < $steps) {
     }
 
     $filenames = glob("skel/$skeleton/*");
+    echo '<p>Files written:</p>';
+    echo '<ul>';
     foreach ($filenames as $filename) {
         ob_start();
         include $filename;
         $filename = $dir . '/' . str_replace('(admin).phtml', "($template).phtml", basename($filename));
         file_put_contents($filename, ob_get_clean());
+        echo "<li>$filename</li>";
     }
+    echo '</ul>';
+    echo '<form method="get">';
+    echo '<input type="submit" value="Done">';
+    echo '</form>';
 }
