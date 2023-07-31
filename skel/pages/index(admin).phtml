@@ -11,8 +11,8 @@
 <table>
 	<thead>
 		<tr>
-<?php foreach ($fieldNames as $fieldName) : ?>
-			<th><?php echo ucfirst($fieldName); ?></th>
+<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; if (!in_array($column,$listFields)) continue;?>
+			<th><?php echo ucfirst($fieldNames[$column]); ?></th>
 <?php endforeach; ?>
 			<th>Actions</th>
 		</tr>
@@ -20,7 +20,7 @@
 	<tbody>
 		<?php echo '<?php' ?> foreach ($data as $row): ?>
 		<tr>
-<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; $referencedTable = $references[$column] ?? false; if ($referencedTable) : ?>
+<?php foreach ($fields as $field) : $column = $field['COLUMN_NAME']; $referencedTable = $references[$column] ?? false; if (!in_array($column,$listFields)) continue; if ($referencedTable) : ?>
 			<td><?php echo '<?php' ?> e($<?php echo $camelize($referencedTable); ?>[$row['<?php echo $table; ?>']['<?php echo $column; ?>']]);?></td>
 <?php else : ?>
 			<td><?php echo '<?php' ?> e($row['<?php echo $table; ?>']['<?php echo $column; ?>']);?></td>
