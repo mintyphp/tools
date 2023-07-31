@@ -1,5 +1,9 @@
 <?php echo '<?php' . "\n" ?>
 
+/**
+ * @var string|null $id
+ */
+
 use MintyPHP\DB;
 
 $data = DB::selectOne('SELECT * FROM `<?php echo $table; ?>` WHERE `<?php echo $primaryKey; ?>` = ?', $id);
