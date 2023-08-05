@@ -269,7 +269,7 @@ if ($step < $steps) {
     //}
     //var_dump($tablePaths);
 
-    $path = substr($directory, strlen('pages/'));
+    $path = substr($directory, strlen('pages/')) ?: '.';
     $dir = $directory . '/' . $table;
     if (!file_exists($dir)) {
         mkdir($dir, 0755, true);
