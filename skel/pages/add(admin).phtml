@@ -2,6 +2,9 @@
 
 /**
  * @var mixed|null $data
+<?php foreach ($references as $column => $referencedTable): ?>
+ * @var mixed|null $<?php echo $camelize($referencedTable); ?>
+<?php endforeach;?>
  */
 
 use MintyPHP\Session;

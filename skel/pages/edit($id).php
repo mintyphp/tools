@@ -34,5 +34,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		Router::redirect("<?php echo $path; ?>/<?php echo $table; ?>/view/$id");
 	}
 } else {
-	$data = DB::selectOne('SELECT * FROM `<?php echo $table; ?>` WHERE `<?php echo $primaryKey; ?>` = ?', $id);
+	$data = DB::selectOne("SELECT * FROM `<?php echo $table; ?>` WHERE `<?php echo $primaryKey; ?>` = ?", $id);
 }
