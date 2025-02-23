@@ -10,7 +10,15 @@ require 'vendor/autoload.php';
 // Import scanFiles function
 require __DIR__ . '/scanfiles.php';
 
-$files = scanFiles(['pages', 'templates']);
+$options = [];
+getopt('p', ['paths'], $options);
+if (isset($options['p'])) {
+    $paths = $options['p'];
+} else {
+    $paths = ['pages', 'templates'];
+}
+
+$files = scanFiles($paths);
 
 foreach ($files as $file) {
     $content = file_get_contents($file);

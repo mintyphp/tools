@@ -15,7 +15,20 @@ require 'vendor/autoload.php';
 // Import scanFiles function
 require __DIR__ . '/scanfiles.php';
 
-$files = scanFiles(['pages', 'templates']);
+$options = [];
+getopt('pd', ['paths', 'domain'], $options);
+if (isset($options['p'])) {
+    $paths = $options['p'];
+} else {
+    $paths = ['pages', 'templates'];
+}
+if (isset($options['d'])) {
+    $domain = $options['d'];
+} else {
+    $domain = 'default';
+}
+
+$files = scanFiles($paths);
 
 class I18nExtractor extends NodeVisitorAbstract
 {
@@ -96,4 +109,4 @@ foreach ($strings as $string => $locations) {
 if (!file_exists('i18n')) {
     mkdir('i18n');
 }
-file_put_contents('i18n/default.pot', $head . "\n" . $body);
+file_put_contents('i18n/' . $domain . '.pot', $head . "\n" . $body);
