@@ -96,9 +96,12 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\\n"
 "X-Poedit-Basepath: ..\\n"
 "X-Poedit-KeywordsList: t\\n"
-"X-Poedit-SearchPath-0: pages\\n"
-"X-Poedit-SearchPath-1: templates\\n"
 POT;
+
+// Add search paths
+foreach ($paths as $i => $path) {
+    $head .= '"X-Poedit-SearchPath-' . $i . ': ' . $path . '\\n"' . "\n";
+}
 
 $body = '';
 foreach ($strings as $string => $locations) {
