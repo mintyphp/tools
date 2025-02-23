@@ -26,7 +26,6 @@ if (isset($options['p'])) {
     $paths = ['pages', 'templates'];
 }
 if (isset($options['d'])) {
-    var_dump($options);
     $domain = $options['d'];
 } else {
     $domain = 'default';
