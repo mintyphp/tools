@@ -2,13 +2,14 @@
     "name": "mintyphp/tools",
     "license": "MIT",
     "authors": [
-    {
-        "name": "Maurits van der Schee",
-        "email": "maurits@vdschee.nl",
-        "homepage": "https://www.tqdev.com"
-    }
+        {
+            "name": "Maurits van der Schee",
+            "email": "maurits@vdschee.nl",
+            "homepage": "https://www.tqdev.com"
+        }
     ],
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=7.0",
+        "nikic/php-parser": "*"
     }
 }
