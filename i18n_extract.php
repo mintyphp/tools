@@ -99,6 +99,7 @@ msgstr ""
 POT;
 
 // Add search paths
+$head .= trim($head) . "\n";
 foreach ($paths as $i => $path) {
     $head .= '"X-Poedit-SearchPath-' . $i . ': ' . $path . '\\n"' . "\n";
 }
