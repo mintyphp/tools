@@ -54,7 +54,6 @@ class I18nExtractor extends NodeVisitorAbstract
                 if ($node->args[0] instanceof PhpParser\Node\Arg) {
                     if ($node->args[0]->value instanceof PhpParser\Node\Scalar\String_) {
                         $string = $node->args[0]->value->value;
-                        $string = preg_replace("/\s+/", " ", $string);
                         if (!isset($this->strings[$string])) {
                             $this->strings[$string] = [];
                         }
@@ -71,7 +70,7 @@ class I18nExtractor extends NodeVisitorAbstract
     }
 }
 
-function str_split_word_aware(string $string, int $maxLengthOfLine): array
+function wordAwareStringSplit(string $string, int $maxLengthOfLine): array
 {
     if (strlen($string) < $maxLengthOfLine - 6) {
         return [$string];
@@ -148,7 +147,11 @@ foreach ($strings as $string => $locations) {
     foreach ($locations as $location) {
         $body .= '#: ' . $location . "\n";
     }
-    $body .= 'msgid "' . $string . '"' . "\n";
+    $msgid = wordAwareStringSplit($string, 80);
+    $body .= 'msgid ';
+    foreach ($msgid as $s) {
+        $body .= json_encode($s, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+    }
     $body .= 'msgstr ""' . "\n";
 }
 

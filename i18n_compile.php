@@ -8,7 +8,18 @@ if (!file_exists('vendor/autoload.php') || !file_exists('pages')) {
 // Load the libraries
 require 'vendor/autoload.php';
 
-$files = glob('i18n/*.po');
+$options = getopt('hp:');
+if (isset($options['h'])) {
+    echo "Usage: php i18n_compile.php [-d default]\n";
+    exit(0);
+}
+if (isset($options['d'])) {
+    $domain = $options['d'];
+} else {
+    $domain = 'default';
+}
+
+$files = glob('i18n/' . $domain . '_*.po');
 foreach ($files as $file) {
     $read = fopen($file, "r");
     if (!$read) {
