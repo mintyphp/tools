@@ -1,9 +1,11 @@
 <?php
 
+use PhpParser\Lexer;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter;
 
 if (!file_exists('vendor/autoload.php') || !file_exists('pages')) {
     echo "Please run this script from the project root.\n";
@@ -52,6 +54,7 @@ class I18nExtractor extends NodeVisitorAbstract
                 if ($node->args[0] instanceof PhpParser\Node\Arg) {
                     if ($node->args[0]->value instanceof PhpParser\Node\Scalar\String_) {
                         $string = $node->args[0]->value->value;
+                        $string = preg_replace("/\s+/", " ", $string);
                         if (!isset($this->strings[$string])) {
                             $this->strings[$string] = [];
                         }
@@ -68,6 +71,41 @@ class I18nExtractor extends NodeVisitorAbstract
     }
 }
 
+function str_split_word_aware(string $string, int $maxLengthOfLine): array
+{
+    if (strlen($string) < $maxLengthOfLine - 6) {
+        return [$string];
+    }
+
+    $lines = [''];
+    $words = explode(' ', $string);
+
+    $currentLine = '';
+    $lineAccumulator = '';
+    foreach ($words as $currentWord) {
+
+        $currentWordWithSpace = sprintf('%s ', $currentWord);
+        $lineAccumulator .= $currentWordWithSpace;
+        if (strlen($lineAccumulator) < $maxLengthOfLine) {
+            $currentLine = $lineAccumulator;
+            continue;
+        }
+
+        $lines[] = $currentLine;
+
+        // Overwrite the current line and accumulator with the current word
+        $currentLine = $currentWordWithSpace;
+        $lineAccumulator = $currentWordWithSpace;
+    }
+
+    if ($currentLine !== '') {
+        $lines[] = $currentLine;
+    }
+
+    $lines[count($lines) - 1] = rtrim($lines[count($lines) - 1], ' ');
+
+    return $lines;
+}
 
 $parserFactory = new ParserFactory();
 $parser = $parserFactory->createForNewestSupportedVersion();

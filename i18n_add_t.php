@@ -28,11 +28,18 @@ foreach ($files as $file) {
     if (str_ends_with($file, ".phtml")) {
         $content = preg_replace_callback_array(
             [
-                '/(^|[^\?])>(\s*)(([^<]|(?=<\?php\s+e\(.*\);\s*\?>)<)+)(\s*)</m' => function ($matches) {
-                    if (!trim($matches[3]) || str_starts_with($matches[3], '<?php e(')) {
+                '/(^|[^\?])>(([^<]|(?=<\?php\s+e\(.*\);\s*\?>)<)+)</s' => function ($matches) {
+                    if (!trim($matches[2]) || str_starts_with(trim($matches[2]), '<?php e(')) {
                         return $matches[0];
                     }
-                    $string = $matches[3];
+                    $string = $matches[2];
+                    $leadingWhite = '';
+                    $trailingWhite = '';
+                    if (preg_match('/^(\s*)(.*?)(\s*)$/s', $string, $whiteMatches)) {
+                        $leadingWhite = $whiteMatches[1];
+                        $string = $whiteMatches[2];
+                        $trailingWhite = $whiteMatches[3];
+                    }
                     $args = [];
                     $string = preg_replace_callback_array(
                         [
@@ -44,11 +51,11 @@ foreach ($files as $file) {
                         $string
                     );
                     if ($args) {
-                        return $matches[1] . '>' . $matches[2] . '<?php e(t("' . str_replace('\"', "'", addslashes($string)) . '", ' . implode(',', $args) . ')); ?>' . $matches[5] . '<';
+                        return $matches[1] . '>' . $leadingWhite . '<?php e(t("' . str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $string))) . '", ' . implode(',', $args) . ')); ?>' . $trailingWhite . '<';
                     }
-                    return $matches[1] . '>' . $matches[2] . '<?php e(t("' . str_replace('\"', "'", addslashes($string)) . '")); ?>' . $matches[5] . '<';
+                    return $matches[1] . '>' . $leadingWhite . '<?php e(t("' . str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $string))) . '")); ?>' . $trailingWhite . '<';
                 },
-                '/((alt|title|placeholder)="(.*?)")/m' => function ($matches) {
+                '/((alt|title|placeholder)="(.*?)")/s' => function ($matches) {
                     if (!trim($matches[3]) || str_starts_with($matches[3], '<?php e(')) {
                         return $matches[0];
                     }
@@ -61,7 +68,7 @@ foreach ($files as $file) {
     if (str_ends_with($file, ".php")) {
         $content = preg_replace_callback_array(
             [
-                '/error[^=]+=[^"](".*?")/m' => function ($matches) {
+                '/error[^=]+=[^"](".*?")/s' => function ($matches) {
                     return str_replace($matches[1], 't(' . $matches[1] . ')', $matches[0]);
                 },
             ],
