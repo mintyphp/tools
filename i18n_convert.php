@@ -1,10 +1,5 @@
 <?php
 
-use PhpParser\Node;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitorAbstract;
-use PhpParser\ParserFactory;
-
 if (!file_exists('vendor/autoload.php') || !file_exists('pages')) {
     echo "Please run this script from the project root.\n";
     exit(1);
