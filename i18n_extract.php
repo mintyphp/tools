@@ -93,4 +93,7 @@ foreach ($strings as $string => $locations) {
     $body .= 'msgstr ""' . "\n";
 }
 
+if (!file_exists('i18n')) {
+    mkdir('i18n');
+}
 file_put_contents('i18n/default.pot', $head . "\n" . $body);
