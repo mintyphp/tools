@@ -10,9 +10,9 @@ require 'vendor/autoload.php';
 // Import scanFiles function
 require __DIR__ . '/scanfiles.php';
 
-$options = getopt('hp::');
+$options = getopt('hp:');
 if (isset($options['h'])) {
-    echo "Usage: php i18n_add_t.php [-p=pages,templates]\n";
+    echo "Usage: php i18n_add_t.php [-p pages,templates]\n";
     exit(0);
 }
 if (isset($options['p'])) {
