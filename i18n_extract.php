@@ -133,7 +133,7 @@ msgstr ""
 POT;
 
 // Add search paths
-$potfile .= trim($potfile) . "\n";
+$potfile = trim($potfile) . "\n";
 foreach ($paths as $i => $path) {
     $potfile .= '"X-Poedit-SearchPath-' . $i . ': ' . $path . '\\n"' . "\n";
 }
