@@ -11,7 +11,11 @@ require 'vendor/autoload.php';
 require __DIR__ . '/scanfiles.php';
 
 $options = [];
-getopt('p::', ['paths'], $options);
+getopt('hp::', ['paths'], $options);
+if (isset($options['h'])) {
+    echo "Usage: php i18n_add_t.php [-p|--paths=pages,templates]\n";
+    exit(0);
+}
 if (isset($options['p'])) {
     $paths = $options['p'];
 } else {

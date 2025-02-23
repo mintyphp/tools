@@ -16,7 +16,11 @@ require 'vendor/autoload.php';
 require __DIR__ . '/scanfiles.php';
 
 $options = [];
-getopt('p::d::', ['paths', 'domain'], $options);
+getopt('hp::d::', ['paths', 'domain'], $options);
+if (isset($options['h'])) {
+    echo "Usage: php i18n_extract.php [-p|--paths=pages,templates] [-d|--domain=default]\n";
+    exit(0);
+}
 if (isset($options['p'])) {
     $paths = $options['p'];
 } else {
