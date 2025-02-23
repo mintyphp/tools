@@ -15,10 +15,9 @@ require 'vendor/autoload.php';
 // Import scanFiles function
 require __DIR__ . '/scanfiles.php';
 
-$options = [];
-getopt('hp::d::', ['paths', 'domain'], $options);
+$options = getopt('hp::d::');
 if (isset($options['h'])) {
-    echo "Usage: php i18n_extract.php [-p|--paths=pages,templates] [-d|--domain=default]\n";
+    echo "Usage: php i18n_extract.php [-p=pages,templates] [-d=default]\n";
     exit(0);
 }
 if (isset($options['p'])) {
