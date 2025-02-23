@@ -16,7 +16,7 @@ if (isset($options['h'])) {
     exit(0);
 }
 if (isset($options['p'])) {
-    $paths = $options['p'];
+    $paths = array_map('trim', explode(',', $options['p']));
 } else {
     $paths = ['pages', 'templates'];
 }
