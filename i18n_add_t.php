@@ -11,7 +11,7 @@ require 'vendor/autoload.php';
 require __DIR__ . '/scanfiles.php';
 
 $options = [];
-getopt('p', ['paths'], $options);
+getopt('p::', ['paths'], $options);
 if (isset($options['p'])) {
     $paths = $options['p'];
 } else {
