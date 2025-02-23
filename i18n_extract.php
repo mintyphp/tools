@@ -119,7 +119,7 @@ foreach ($files as $file) {
 
 $potCreationDate = date('Y-m-d H:i:O');
 
-$head = <<<POT
+$potfile = <<<POT
 #, fuzzy
 msgid ""
 msgstr ""
@@ -133,26 +133,25 @@ msgstr ""
 POT;
 
 // Add search paths
-$head .= trim($head) . "\n";
+$potfile .= trim($potfile) . "\n";
 foreach ($paths as $i => $path) {
-    $head .= '"X-Poedit-SearchPath-' . $i . ': ' . $path . '\\n"' . "\n";
+    $potfile .= '"X-Poedit-SearchPath-' . $i . ': ' . $path . '\\n"' . "\n";
 }
 
-$body = '';
 foreach ($strings as $string => $locations) {
-    $body .= "\n";
+    $potfile .= "\n";
     foreach ($locations as $location) {
-        $body .= '#: ' . $location . "\n";
+        $potfile .= '#: ' . $location . "\n";
     }
     $msgid = wordAwareStringSplit($string, 80);
-    $body .= 'msgid ';
+    $potfile .= 'msgid ';
     foreach ($msgid as $s) {
-        $body .= json_encode($s, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+        $potfile .= json_encode($s, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
     }
-    $body .= 'msgstr ""' . "\n";
+    $potfile .= 'msgstr ""' . "\n";
 }
 
 if (!file_exists('i18n')) {
     mkdir('i18n');
 }
-file_put_contents('i18n/' . $domain . '.pot', $head . "\n" . $body);
+file_put_contents('i18n/' . $domain . '.pot', $potfile);
