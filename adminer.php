@@ -1,6 +1,7 @@
 <?php
 
 use MintyPHP\DB;
+use Adminer\Adminer;
 
 // Use default autoload implementation
 require 'vendor/autoload.php';
