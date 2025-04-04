@@ -12,7 +12,8 @@ require 'config/config.php';
 if (!isset($_GET["username"])) {
     $_POST["auth"] = array(
         'driver' => 'server',
-        'server' => DB::$host . ':' . DB::$port,
+        'server' => DB::$host,
+        'port' => DB::$port,
         'username' => DB::$username,
         'password' => DB::$password,
         'db' => DB::$database,
