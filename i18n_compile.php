@@ -8,7 +8,7 @@ if (!file_exists('vendor/autoload.php') || !file_exists('pages')) {
 // Load the libraries
 require 'vendor/autoload.php';
 
-$options = getopt('hp:');
+$options = getopt('hd:');
 if (isset($options['h'])) {
     echo "Usage: php i18n_compile.php [-d default]\n";
     exit(0);
