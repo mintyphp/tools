@@ -28,7 +28,7 @@ foreach ($files as $file) {
     if (str_ends_with($file, ".phtml")) {
         $content = preg_replace_callback_array(
             [
-                '/(^|[^\?])>(([^<]|(?=<\?php\s+e\(.*\);\s*\?>)<)+)</s' => function ($matches) {
+                '/(^|[^=\?])>(([^<]|(?=<\?php\s+e\(.*\);\s*\?>)<)+)</s' => function ($matches) {
                     if (!trim($matches[2]) || str_starts_with(trim($matches[2]), '<?php e(')) {
                         return $matches[0];
                     }
