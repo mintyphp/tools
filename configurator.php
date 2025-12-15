@@ -168,7 +168,7 @@ class Configurator
                 $nameChars = max($nameChars, strlen($v['name']));
             }
             foreach ($variables as $v) {
-                $name = sprintf("%-${nameChars}s", $v['name']);
+                $name = sprintf("%-{$nameChars}s", $v['name']);
                 $value = sprintf("%s", $export($v));
                 $code .= "MintyPHP\\$class::\$$name = $value;";
                 if ($v['comment']) {
