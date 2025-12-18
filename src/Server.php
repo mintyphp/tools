@@ -16,12 +16,18 @@ class Server
     private string $documentRoot;
     private string $scriptName;
 
+    /**
+     * Constructor to initialize document root and script name
+     */
     public function __construct(string $documentRoot, string $scriptName)
     {
         $this->documentRoot = $documentRoot;
         $this->scriptName = $scriptName;
     }
 
+    /**
+     * Run the server logic based on the script name
+     */
     public function run(): bool
     {
         $dir = $this->documentRoot;
@@ -45,6 +51,9 @@ class Server
     }
 }
 
+/**
+ * Entry point for the server
+ */
 if (isset($_SERVER['DOCUMENT_ROOT']) && isset($_SERVER['SCRIPT_NAME'])) {
     require 'vendor/autoload.php';
     require 'config/config.php';

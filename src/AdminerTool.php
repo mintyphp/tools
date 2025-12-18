@@ -14,6 +14,9 @@ class AdminerTool
     private string $url;
     private string $storagePath;
 
+    /**
+     * Static method to run the Adminer tool.
+     */
     public static function run(): void
     {
         (new self(
