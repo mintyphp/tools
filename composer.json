@@ -10,6 +10,12 @@
     ],
     "require": {
         "php": ">=7.0",
-        "nikic/php-parser": "*"
+        "nikic/php-parser": "*",
+        "mintyphp/core": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "MintyPHP\\Tools\\": "src/"
+        }
     }
 }
