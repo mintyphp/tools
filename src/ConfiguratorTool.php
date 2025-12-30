@@ -84,9 +84,9 @@ class ConfiguratorTool
         $html[] = '</pre>';
 
         if ($success) {
-            $html[] = '<input type="button" value="OK" onClick="window.location.href=window.location.href">';
+            $html[] = '<input type="button" value="OK" onClick="window.location.href=\'/\'">';
         } else {
-            $html[] = '<input type="button" value="Back" onClick="history.go(-1)">';
+            $html[] = '<input type="button" value="Back" onClick="window.location.href=\'/\'">';
         }
 
         return implode("\n", $html);
