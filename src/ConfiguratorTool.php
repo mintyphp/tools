@@ -84,7 +84,7 @@ class ConfiguratorTool
         $html[] = '</pre><br>';
 
         if ($success) {
-            $html[] = '<a class="button is-primary" href="/" role="button">OK</a>';
+            $html[] = '<a class="button is-primary" href="?" role="button">Back</a>';
         } else {
             $html[] = '<a class="button is-warning" href="javascript:history.go(-1)" role="button">Back</a>';
         }
@@ -101,10 +101,9 @@ class ConfiguratorTool
 
         $html = [];
         $html[] = '<div class="box">';
-        $html[] = '<p class="content">Modify the configuration settings in the form below and click Apply to save changes.</p>';
+        $html[] = '<h1 class="title is-4">config/config.php</h1>';
         $html[] = $form->toString();
         $html[] = '</div>';
-        $html[] = '<a class="button" href="/" role="button">Back</a>';
 
         return implode("\n", $html);
     }
@@ -195,7 +194,7 @@ class ConfiguratorTool
             }
         }
 
-        $form->field(E::field(E::submit('Apply')->class('mt-6')));
+        $form->field(E::field(E::submit('Save')->class('mt-6')));
 
         return $form;
     }
