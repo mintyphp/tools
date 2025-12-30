@@ -193,7 +193,7 @@ class TranslatorTool
         $html[] = '<ol>';
         $html[] = '<li><strong>Add Translation Calls:</strong> Wraps text in your template files with t() translation function calls.</li>';
         $html[] = '<li><strong>Extract Translations:</strong> Scans your code for t() calls and creates/updates a .pot file with all translatable strings.</li>';
-        $html[] = '<li><strong>Actual Translation:</strong> Use the external tool <a href="https://poedit.net/">Poedit</a> to translate .pot files into .po files.</li>';
+        $html[] = '<li><strong>Actual Translation:</strong> Use the external tool <a href="https://poedit.net/">Poedit</a> to translate the .pot files into a .po file per language.</li>';
         $html[] = '<li><strong>Compile Translations:</strong> Converts .po files to .json files for use at runtime.</li>';
         $html[] = '</ol>';
         $html[] = '</div>';
