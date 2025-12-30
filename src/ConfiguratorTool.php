@@ -74,20 +74,19 @@ class ConfiguratorTool
             $code = $this->generateCode($config);
             $this->writeCode($code);
             $html[] = $messages['output'];
-            $html[] = '\nConfig written';
+            $html[] = 'Config written';
             $success = true;
         } else {
             $html[] = $messages['output'];
-            $html[] = '';
             $html[] = 'Config not written (invalid)';
         }
 
-        $html[] = '</pre>';
+        $html[] = '</pre><br>';
 
         if ($success) {
-            $html[] = '<input type="button" value="OK" onClick="window.location.href=\'/\'">';
+            $html[] = '<a class="button is-primary" href="/" role="button">OK</a>';
         } else {
-            $html[] = '<input type="button" value="Back" onClick="history.go(-1)">';
+            $html[] = '<a class="button is-warning" href="javascript:history.go(-1)" role="button">Back</a>';
         }
 
         return implode("\n", $html);
