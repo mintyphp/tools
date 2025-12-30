@@ -11,6 +11,7 @@ class Server
         '/debugger.php' => DebuggerTool::class,
         '/adminer.php' => AdminerTool::class,
         '/configurator.php' => ConfiguratorTool::class,
+        '/translator.php' => TranslatorTool::class,
     ];
 
     private string $documentRoot;
