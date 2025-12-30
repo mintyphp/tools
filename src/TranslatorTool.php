@@ -190,11 +190,12 @@ class TranslatorTool
         $html[] = '<div class="box mt-5">';
         $html[] = '<h2 class="subtitle">Translation Operations:</h2>';
         $html[] = '<div class="content">';
-        $html[] = '<ul>';
+        $html[] = '<ol>';
         $html[] = '<li><strong>Add Translation Calls:</strong> Wraps text in your template files with t() translation function calls.</li>';
         $html[] = '<li><strong>Extract Translations:</strong> Scans your code for t() calls and creates/updates a .pot file with all translatable strings.</li>';
+        $html[] = '<li><strong>Actual Translation:</strong> Use the external tool <a href="">Poedit</a> to translate .pot files into .po files.</li>';
         $html[] = '<li><strong>Compile Translations:</strong> Converts .po files to .json files for use at runtime.</li>';
-        $html[] = '</ul>';
+        $html[] = '</ol>';
         $html[] = '</div>';
         $mainOperationsForm = $this->buildMainOperationsForm();
         $html[] = $mainOperationsForm->toString();
