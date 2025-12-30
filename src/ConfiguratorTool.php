@@ -99,7 +99,14 @@ class ConfiguratorTool
         $form = $this->buildForm($config);
         $form->fill($this->flattenConfig($config));
 
-        return $form->toString();
+        $html = [];
+        $html[] = '<div class="box">';
+        $html[] = '<p class="content">Modify the configuration settings in the form below and click Apply to save changes.</p>';
+        $html[] = $form->toString();
+        $html[] = '</div>';
+        $html[] = '<a class="button" href="/" role="button">Back</a>';
+
+        return implode("\n", $html);
     }
 
     public function loadCode(): string
@@ -188,7 +195,7 @@ class ConfiguratorTool
             }
         }
 
-        $form->field(E::field(E::submit('Test and Save')->class('mt-6')));
+        $form->field(E::field(E::submit('Apply')->class('mt-6')));
 
         return $form;
     }

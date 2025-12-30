@@ -200,6 +200,7 @@ class TranslatorTool
         $mainOperationsForm = $this->buildMainOperationsForm();
         $html[] = $mainOperationsForm->toString();
         $html[] = '</div>';
+        $html[] = '<a href="/" class="button">Back</a>';
 
         return implode("\n", $html);
     }
