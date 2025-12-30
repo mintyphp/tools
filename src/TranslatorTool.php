@@ -193,7 +193,7 @@ class TranslatorTool
         $html[] = '<ol>';
         $html[] = '<li><strong>Add Translation Calls:</strong> Wraps text in your template files with t() translation function calls.</li>';
         $html[] = '<li><strong>Extract Translations:</strong> Scans your code for t() calls and creates/updates a .pot file with all translatable strings.</li>';
-        $html[] = '<li><strong>Actual Translation:</strong> Use the external tool <a href="">Poedit</a> to translate .pot files into .po files.</li>';
+        $html[] = '<li><strong>Actual Translation:</strong> Use the external tool <a href="https://poedit.net/">Poedit</a> to translate .pot files into .po files.</li>';
         $html[] = '<li><strong>Compile Translations:</strong> Converts .po files to .json files for use at runtime.</li>';
         $html[] = '</ol>';
         $html[] = '</div>';
@@ -244,9 +244,9 @@ class TranslatorTool
         // Operation selection
         $form->field(E::field(
             E::select('operation', [
-                'add_t' => 'Add Translation Calls',
-                'extract' => 'Extract Translations',
-                'compile' => 'Compile Translations'
+                'add_t' => '1. Add Translation Calls',
+                'extract' => '2. Extract Translations',
+                'compile' => '4. Compile Translations'
             ]),
             E::label('Operation')
         ));
