@@ -78,7 +78,8 @@ class ConfiguratorTool
             $success = true;
         } else {
             $html[] = $messages['output'];
-            $html[] = '\nConfig not written (invalid)';
+            $html[] = '';
+            $html[] = 'Config not written (invalid)';
         }
 
         $html[] = '</pre>';
