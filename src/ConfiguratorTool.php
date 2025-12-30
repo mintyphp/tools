@@ -138,7 +138,7 @@ class ConfiguratorTool
             foreach ($config[$class] as $i => $v) {
                 if ($name == $v['name']) {
                     if (gettype($v['value']) == 'boolean') {
-                        $config[$class][$i]['value'] = (bool) $value;
+                        $config[$class][$i]['value'] = $value == 'true';
                     } else if (gettype($v['value']) == 'integer') {
                         $config[$class][$i]['value'] = (int) $value;
                     } else if (gettype($v['value']) == 'double') {
@@ -179,10 +179,7 @@ class ConfiguratorTool
                 $label = $comment ? "$name ($comment)" : $name;
 
                 if (gettype($v['value']) == 'boolean') {
-                    $control = E::select($inputName, [
-                        '1' => 'true',
-                        '0' => 'false'
-                    ]);
+                    $control = E::select($inputName, ['false', 'true']);
                 } else {
                     $control = E::text($inputName);
                 }
@@ -204,7 +201,7 @@ class ConfiguratorTool
             foreach ($variables as $v) {
                 $inputName = $class . '[' . $v['name'] . ']';
                 if (gettype($v['value']) == 'boolean') {
-                    $data[$inputName] = $v['value'] ? '1' : '0';
+                    $data[$inputName] = $v['value'] ? 'true' : 'false';
                 } else {
                     $data[$inputName] = (string) $v['value'];
                 }
@@ -234,7 +231,7 @@ class ConfiguratorTool
                 } else if (is_numeric($value)) {
                     $value = (int) $value;
                 } else if (in_array($value, array('true', 'false'))) {
-                    $value = $value == 'true' ?: false;
+                    $value = $value == 'true';
                 } else {
                     $value = trim($value, '\'"');
                 }

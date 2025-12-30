@@ -6,8 +6,8 @@ use MintyPHP\Debugger;
 
 class Server
 {
-    // Mapping of paths to their respective handler classes
-    const array MAPPING = [
+    // Routing of paths to their respective handler classes
+    const array ROUTES = [
         '/debugger.php' => DebuggerTool::class,
         '/adminer.php' => AdminerTool::class,
         '/configurator.php' => ConfiguratorTool::class,
@@ -36,9 +36,9 @@ class Server
             return false;
         }
 
-        if (Debugger::$enabled && array_key_exists($this->scriptName, self::MAPPING)) {
+        if (Debugger::$enabled && array_key_exists($this->scriptName, self::ROUTES)) {
             Debugger::$enabled = false;
-            $handlerClass = self::MAPPING[$this->scriptName];
+            $handlerClass = self::ROUTES[$this->scriptName];
             $handlerClass::run();
         } else {
             $_SERVER['SCRIPT_NAME'] = '/index.php';
