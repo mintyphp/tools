@@ -408,6 +408,9 @@ POT;
             throw new \Exception("POT file not found: $potFile. Please extract translations first.");
         }
 
+        // Parse the POT file header
+        $potHeader = $this->parsePotHeader($potFile);
+
         // Parse the POT file to get all strings
         $strings = $this->parsePotFile($potFile);
 
@@ -427,7 +430,7 @@ POT;
             ];
         }
 
-        $this->generatePoFile($domain, $targetLanguage, $emptyStrings);
+        $this->generatePoFile($domain, $targetLanguage, $emptyStrings, $potHeader);
         echo "Created: i18n/{$domain}_{$targetLanguage}.po with " . count($strings) . " empty translations\n";
     }
 
@@ -456,6 +459,41 @@ POT;
         if (empty($removed)) {
             throw new \Exception("No files found for language '$targetLanguage' in domain '$domain'");
         }
+    }
+
+    /**
+     * Parse POT file header
+     */
+    private function parsePotHeader(string $potFile): string
+    {
+        $content = file_get_contents($potFile);
+        $lines = explode("\n", $content);
+
+        $headerLines = [];
+        $inHeader = false;
+
+        for ($i = 0; $i < count($lines); $i++) {
+            $line = $lines[$i];
+
+            if (str_starts_with($line, 'msgid ""')) {
+                $inHeader = true;
+                continue;
+            }
+
+            if ($inHeader) {
+                if (str_starts_with($line, 'msgstr')) {
+                    // Start of msgstr, continue collecting header lines
+                    continue;
+                } elseif (str_starts_with($line, '"')) {
+                    $headerLines[] = $line;
+                } else {
+                    // End of header
+                    break;
+                }
+            }
+        }
+
+        return implode("\n", $headerLines);
     }
 
     /**
@@ -498,86 +536,53 @@ POT;
     }
 
     /**
-     * Parse PO file and extract translations (msgid => msgstr mapping)
-     */
-    private function parsePoFile(string $poFile): array
-    {
-        $content = file_get_contents($poFile);
-        $translations = [];
-        $lines = explode("\n", $content);
-
-        $currentMsgid = [];
-        $currentMsgstr = [];
-        $inMsgid = false;
-        $inMsgstr = false;
-
-        for ($i = 0; $i < count($lines); $i++) {
-            $line = $lines[$i];
-
-            if (str_starts_with($line, 'msgid')) {
-                // Save previous entry if exists
-                if (!empty($currentMsgid)) {
-                    $msgid = implode('', $currentMsgid);
-                    $msgstr = implode('', $currentMsgstr);
-                    if ($msgid !== '') {
-                        $translations[$msgid] = $msgstr;
-                    }
-                }
-
-                $currentMsgid = [json_decode(substr(trim($line), 6))];
-                $currentMsgstr = [];
-                $inMsgid = true;
-                $inMsgstr = false;
-            } elseif (str_starts_with($line, 'msgstr')) {
-                $currentMsgstr = [json_decode(substr(trim($line), 7))];
-                $inMsgid = false;
-                $inMsgstr = true;
-            } elseif (str_starts_with(trim($line), '"')) {
-                if ($inMsgid) {
-                    $currentMsgid[] = json_decode(trim($line));
-                } elseif ($inMsgstr) {
-                    $currentMsgstr[] = json_decode(trim($line));
-                }
-            } else {
-                // Reset on empty line or comment
-                $inMsgid = false;
-                $inMsgstr = false;
-            }
-        }
-
-        // Save last entry
-        if (!empty($currentMsgid)) {
-            $msgid = implode('', $currentMsgid);
-            $msgstr = implode('', $currentMsgstr);
-            if ($msgid !== '') {
-                $translations[$msgid] = $msgstr;
-            }
-        }
-
-        return $translations;
-    }
-
-    /**
      * Generate a PO file from translated strings
      */
-    private function generatePoFile(string $domain, string $language, array $translatedStrings): void
+    private function generatePoFile(string $domain, string $language, array $translatedStrings, string $potHeader): void
     {
         $poFile = "i18n/{$domain}_{$language}.po";
         $creationDate = date('Y-m-d H:i:O');
 
-        $content = <<<POT
-# Translation file for $domain ($language)
-msgid ""
-msgstr ""
-"POT-Creation-Date: $creationDate\\n"
-"PO-Revision-Date: $creationDate\\n"
-"Language: $language\\n"
-"MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
-"Content-Transfer-Encoding: 8bit\\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\\n"
+        if ($potHeader !== null) {
+            // Use the POT header and modify it for PO
+            $headerLines = explode("\n", $potHeader);
+            $hasLanguage = false;
+            $hasRevisionDate = false;
 
-POT;
+            foreach ($headerLines as $i => $line) {
+                // Check if Language field exists
+                if (preg_match('/^"Language:/', $line)) {
+                    $headerLines[$i] = '"Language: ' . $language . '\\n"';
+                    $hasLanguage = true;
+                }
+                // Check if PO-Revision-Date exists
+                if (preg_match('/^"PO-Revision-Date:/', $line)) {
+                    $headerLines[$i] = '"PO-Revision-Date: ' . $creationDate . '\\n"';
+                    $hasRevisionDate = true;
+                }
+            }
+
+            // Add missing fields
+            if (!$hasLanguage) {
+                $headerLines[] = '"Language: ' . $language . '\\n"';
+            }
+            if (!$hasRevisionDate) {
+                // Insert after POT-Creation-Date if it exists
+                $inserted = false;
+                foreach ($headerLines as $i => $line) {
+                    if (preg_match('/^"POT-Creation-Date:/', $line)) {
+                        array_splice($headerLines, $i + 1, 0, ['"PO-Revision-Date: ' . $creationDate . '\\n"']);
+                        $inserted = true;
+                        break;
+                    }
+                }
+                if (!$inserted) {
+                    array_unshift($headerLines, '"PO-Revision-Date: ' . $creationDate . '\\n"');
+                }
+            }
+
+            $content = "# Translation file for $domain ($language)\nmsgid \"\"\nmsgstr \"\"\n" . implode("\n", $headerLines);
+        }
 
         foreach ($translatedStrings as $original => $data) {
             $content .= "\n";
@@ -606,7 +611,7 @@ POT;
      */
     private function compileTranslations(string $domain): void
     {
-        $files = glob('i18n/' . $domain . '_*.po');
+        $files = glob('i18n/' . $domain . '*.po');
 
         if (empty($files)) {
             echo "No .po files found for domain '$domain'\n";
