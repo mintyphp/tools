@@ -15,8 +15,8 @@ class TranslationCallAdder
 
         // replace doctype with fake tag
         $content = preg_replace('/<!DOCTYPE(.*?)>/is', '<fakedoctype$1></fakedoctype>', $content);
-        // replace html tag with fake tag
-        $content = preg_replace('/<(\/)?html(.*?)>/is', '<$1fakehtml$2>', $content);
+        // replace html or head tag with fake tag
+        $content = preg_replace('/<(\/)?(html|head)(.*?)>/is', '<$1fake$2$3>', $content);
 
         // replace PHP blocks
         $content = preg_replace_callback(
@@ -51,8 +51,8 @@ class TranslationCallAdder
         }
         // Restore doctype
         $html = preg_replace('/<fakedoctype(.*?)><\/fakedoctype>/is', '<!DOCTYPE$1>', $html);
-        // Restore html tag
-        $html = preg_replace('/<(\/)?fakehtml(.*?)>/is', '<$1html$2>', $html);
+        // Restore html or head tag
+        $html = preg_replace('/<(\/)?fake(html|head)(.*?)>/is', '<$1$2$3>', $html);
 
         // Step 5: Replace all fake PHP tags back with actual PHP blocks using string replacement
         foreach ($phpBlocks as $id => $block) {

@@ -185,10 +185,10 @@ HTML;
 
     public function testAddToPhtml_FullHtmlDocument(): void
     {
-        $input = '<?php use bla; ?><!DOCTYPE html><html lang="en"><body></body></html>';
+        $input = '<?php use bla; ?><!DOCTYPE html><html lang="en"><head></head><body></body></html>';
         $output = $this->adder->addToPhtml($input);
 
         // Should preserve DOCTYPE and html tags
-        $this->assertEquals('<?php use bla; ?><!DOCTYPE html><html lang="en"><body></body></html>', $output);
+        $this->assertEquals('<?php use bla; ?><!DOCTYPE html><html lang="en"><head></head><body></body></html>', $output);
     }
 }
