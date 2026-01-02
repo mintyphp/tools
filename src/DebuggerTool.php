@@ -3,6 +3,8 @@
 namespace MintyPHP\Tools;
 
 use MintyPHP\Core\Debugger;
+use MintyPHP\Core\Debugger\ApiCall;
+use MintyPHP\Core\Debugger\ApiCallTiming;
 use MintyPHP\Core\Debugger\Request;
 use MintyPHP\Core\Debugger\Query;
 
@@ -546,6 +548,7 @@ class DebuggerTool
         $count = 0;
         $total = 0;
         foreach ($request->apiCalls as $i => $call) {
+            /** @var ApiCall $call */
             $count++;
             $total += $call->duration;
             $url = $call->url;
@@ -572,10 +575,16 @@ class DebuggerTool
             $tables['details']['data_received'] = $call->body ? '<a href="data:application/json;charset=UTF-8;base64,' . base64_encode($call->body) . '">View (' . strlen($call->body) . ' bytes)</a>' : '-';
             $tables['details']['headers_sent'] = $call->headers ? '<a href="data:application/json;charset=UTF-8;base64,' . base64_encode(json_encode($call->headers, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES + JSON_UNESCAPED_UNICODE) ?: '') . '">' . count($call->headers) . ' headers</a>' : '-';
             $tables['details']['headers_received'] = $call->responseHeaders ? '<a href="data:application/json;charset=UTF-8;base64,' . base64_encode(json_encode($call->responseHeaders, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES + JSON_UNESCAPED_UNICODE) ?: '') . '">' . count($call->responseHeaders) . ' headers</a>' : '-';
-            $tables['timing'] = array_map(function (float $v) {
-                return sprintf('%.2f ms', $v * 1000);
-            }, $call->timing->toArray());
-
+            /** @var ApiCallTiming $timing */
+            $timing = $call->timing;
+            $tables['timing'] = [
+                'nameLookup' => sprintf('%.2f ms', $timing->nameLookup * 1000),
+                'connect' => sprintf('%.2f ms', $timing->connect * 1000),
+                'preTransfer' => sprintf('%.2f ms', $timing->preTransfer * 1000),
+                'startTransfer' => sprintf('%.2f ms', $timing->startTransfer * 1000),
+                'redirect' => sprintf('%.2f ms', $timing->redirect * 1000),
+                'total' => sprintf('%.2f ms', $timing->total * 1000),
+            ];
             $tables['options'] = $call->options;
             foreach ($tables as $table => $fields) {
                 $t = 0;
