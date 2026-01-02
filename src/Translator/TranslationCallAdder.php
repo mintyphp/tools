@@ -19,8 +19,7 @@ class TranslationCallAdder
         $content = preg_replace_callback(
             '/<\?php\s*e\((?!t\()(.*?)\);\s*\?>/s',
             function ($matches) use (&$echoBlocks, &$echoId) {
-                $echoId++;
-                $echoBlocks[$echoId] = $matches[1];
+                $echoBlocks[++$echoId] = $matches[0];
                 return '__PHP-ECHO__' . $echoId;
             },
             $content
@@ -28,10 +27,9 @@ class TranslationCallAdder
 
         // Step 1b: replace PHP blocks (or translated echo blocks) with fake HTML tags
         $content = preg_replace_callback(
-            '/<\?php(?:.*?\?>|.*$)/s',
+            '/<\?php(.*?\?>|.*$)/s',
             function ($matches) use (&$phpBlocks, &$phpId) {
-                $phpId++;
-                $phpBlocks[$phpId] = $matches[0];
+                $phpBlocks[++$phpId] = $matches[0];
                 return '<php id=' . $phpId . '></php>';
             },
             $content
@@ -40,34 +38,16 @@ class TranslationCallAdder
         // Step 2: Process attributes (alt, title, placeholder) with translation calls
         $content = preg_replace_callback(
             '/\b(alt|title|placeholder)\s*=\s*"([^"<>]+)"/i',
-            function ($matches) use (&$phpBlocks, &$phpId) {
+            function ($matches) use (&$phpBlocks, &$echoBlocks, &$phpId) {
                 $attrName = $matches[1];
                 $attrValue = $matches[2];
 
-                // Skip if empty
-                if (!trim($attrValue)) {
+                // Skip if empty or only a PHP echo placeholder
+                if (!trim($attrValue) || preg_match('/^__PHP-ECHO__\d+$/', $attrValue)) {
                     return $matches[0];
                 }
 
-                // If attrValue contains PHP echo placeholders, add parameters 
-                $params = [];
-                $paramAttrValue = preg_replace_callback(
-                    '/__PHP-ECHO__(\d+)/',
-                    function ($echoMatches) use (&$params) {
-                        $params[] = $echoMatches[0];
-                        return '%s';
-                    },
-                    $attrValue
-                );
-
-                $phpId++;
-                if ($params && $paramAttrValue !== '%s') {
-                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $paramAttrValue)));
-                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '", ' . implode(', ', $params) . ')); ?>';
-                } else {
-                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $attrValue)));
-                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '")); ?>';
-                }
+                $phpBlocks[++$phpId] = $this->createTranslationBlock($attrValue, $echoBlocks);
                 return $attrName . '="<php id=' . $phpId . '></php>"';
             },
             $content
@@ -76,7 +56,7 @@ class TranslationCallAdder
         // Step 3: Process text content between tags with translation calls
         $content = preg_replace_callback(
             '/>([^<>]+)</s',
-            function ($matches) use (&$phpBlocks, &$phpId) {
+            function ($matches) use (&$phpBlocks, &$echoBlocks, &$phpId) {
                 $text = $matches[1];
 
                 // Skip if whitespace-only or contains fake PHP tags
@@ -90,49 +70,54 @@ class TranslationCallAdder
                 $trimmedText = $whiteMatches[2];
                 $trailingWhite = $whiteMatches[3];
 
-                // Skip if no actual content
-                if (!$trimmedText) {
+                // Skip if no actual content or only a PHP echo placeholder
+                if (!$trimmedText || preg_match('/^__PHP-ECHO__\d+$/', $trimmedText)) {
                     return $matches[0];
                 }
 
-                // If trimmedText contains PHP echo placeholders, add parameters 
-                $params = [];
-                $paramTrimmedText = preg_replace_callback(
-                    '/__PHP-ECHO__(\d+)/',
-                    function ($echoMatches) use (&$params) {
-                        $params[] = $echoMatches[0];
-                        return '%s';
-                    },
-                    $trimmedText
-                );
-
-                // Create new PHP block with translation call
-                $phpId++;
-                if ($params && $paramTrimmedText !== '%s') {
-                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $paramTrimmedText)));
-                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '", ' . implode(', ', $params) . ')); ?>';
-                } else {
-                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $trimmedText)));
-                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '")); ?>';
-                }
+                $phpBlocks[++$phpId] = $this->createTranslationBlock($trimmedText, $echoBlocks);
                 return '>' . $leadingWhite . '<php id=' . $phpId . '></php>' . $trailingWhite . '<';
             },
             $content
         );
 
-        $html = $content;
-
-        // Step 4: Replace all fake PHP tags back with actual PHP blocks using string replacement
-        foreach ($phpBlocks as $id => $block) {
-            $html = str_replace('<php id=' . $id . '></php>', $block, $html);
-        }
-
-        // Step 5: Replace all fake PHP echo placeholders back with actual PHP echo blocks
+        // Step 4: Restore PHP blocks
         foreach ($echoBlocks as $id => $block) {
-            $html = str_replace('__PHP-ECHO__' . $id, $block, $html);
+            $content = str_replace('__PHP-ECHO__' . $id, $block, $content);
         }
 
-        return $html;
+        // Step 5Restore PHP block placeholders
+        foreach ($phpBlocks as $id => $block) {
+            $content = str_replace('<php id=' . $id . '></php>', $block, $content);
+        }
+
+        return $content;
+    }
+
+    /**
+     * Process PHP echo placeholders and create a translation block
+     */
+    private function createTranslationBlock(string $text, array $echoBlocks): string
+    {
+        $params = [];
+        $processedText = preg_replace_callback(
+            '/__PHP-ECHO__(\d+)/',
+            function ($matches) use (&$params, $echoBlocks) {
+                $echoBlock = $echoBlocks[$matches[1]];
+                preg_match('/<\?php\s*e\((.*?)\);\s*\?>/', $echoBlock, $innerMatches);
+                $params[] = $innerMatches[1];
+                return '%s';
+            },
+            $text
+        );
+
+        $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $processedText)));
+
+        if ($params) {
+            return '<?php e(t("' . $escapedText . '", ' . implode(', ', $params) . ')); ?>';
+        }
+
+        return '<?php e(t("' . $escapedText . '")); ?>';
     }
 
     /**

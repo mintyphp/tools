@@ -113,7 +113,7 @@ class TranslationCallAdderTest extends TestCase
         $input = '<div>It\'s working</div>';
         $output = $this->adder->addToPhtml($input);
 
-        $this->assertStringContainsString('e(t("It', $output);
+        $this->assertEquals('<div><?php e(t("It\\\'s working")); ?></div>', $output);
     }
 
     public function testAddToPhtml_SkipsAlreadyTranslated(): void
@@ -211,5 +211,12 @@ HTML;
         $input = '<a href="logout">Logout "<?php e($username); ?>"</a>';
         $output = $this->adder->addToPhtml($input);
         $this->assertEquals('<a href="logout"><?php e(t("Logout \'%s\'", $username)); ?></a>', $output);
+    }
+
+    public function testAddToPhtml_ListItemWithPhpEchos(): void
+    {
+        $input = '<li><a href="<?php e($result[\'link\']); ?>"><?php e($result[\'text\']); ?></a></li>';
+        $output = $this->adder->addToPhtml($input);
+        $this->assertEquals('<li><a href="<?php e($result[\'link\']); ?>"><?php e($result[\'text\']); ?></a></li>', $output);
     }
 }
