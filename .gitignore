@@ -1,3 +1,4 @@
-latest-en.txt
-vendor/
 composer.phar
+composer.lock
+vendor/
+latest-en.txt
