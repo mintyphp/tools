@@ -125,7 +125,7 @@ class DebuggerTool
      */
     public function getRequestCaption(Request $request): string
     {
-        $parts = array();
+        $parts = [];
         if (isset($request->type)) {
             $parts[] = '<span class="badge pull-right">' . $request->status . '</span>';
         }
@@ -147,7 +147,7 @@ class DebuggerTool
      */
     public function getRequestList(array $requests): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<ul class="nav nav-pills nav-stacked">';
         /** @var Request $request */
         foreach ($requests as $i => $request) {
@@ -170,7 +170,7 @@ class DebuggerTool
      */
     public function getTabList($i): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<ul class="nav nav-pills">';
         $html[] = '<li class="active"><a class="debug-request-routing" href="#debug-request-' . $i . '-routing" data-toggle="tab">Routing</a></li>';
         $html[] = '<li><a class="debug-request-execution" href="#debug-request-' . $i . '-execution" data-toggle="tab">Execution</a></li>';
@@ -214,7 +214,7 @@ class DebuggerTool
      */
     public function getRoutingTabPane(int $requestId, Request $request): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<div class="tab-pane active" id="debug-request-' . $requestId . '-routing">';
         if ($request->route->method == 'GET' && count($request->route->getParameters)) {
             $html[] = '<div class="alert alert-info"><strong>Info:</strong> It is better to use path parameters than GET parameters</div>';
@@ -277,7 +277,7 @@ class DebuggerTool
      */
     public function getExecutionTabPane(int $requestId, Request $request): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<div class="tab-pane" id="debug-request-' . $requestId . '-execution">';
         $html[] = '<div class="row"><div class="col-md-10"><h4>Result</h4>';
         $html[] = '<div class="well well-sm">';
@@ -339,7 +339,7 @@ class DebuggerTool
      */
     public function getSessionTabPane(int $requestId, Request $request): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<div class="tab-pane" id="debug-request-' . $requestId . '-session">';
         $html[] = '<h4>Before</h4>';
         $html[] = '<pre>';
@@ -363,7 +363,7 @@ class DebuggerTool
      */
     public function getQueriesTabPaneTabList(int $requestId, int $i, int $args, int $rows): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<ul class="nav nav-pills">';
         $args = $args ? '<span class="badge pull-right">' . $args . '</span>' : '';
         $html[] = '<li class="active"><a href="#debug-request-' . $requestId . '-query-' . $i . '-arguments" data-toggle="tab">Arguments' . $args . '</a></li>';
@@ -496,7 +496,7 @@ class DebuggerTool
      */
     public function getQueriesTabPane(int $requestId, Request $request): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<div class="tab-pane" id="debug-request-' . $requestId . '-queries">';
         $html[] = '<table class="table"><thead>';
         $html[] = '<tr><th>DB</th><th>Duration</th></tr>';
@@ -536,7 +536,7 @@ class DebuggerTool
      */
     public function getApiCallsTabPane(int $requestId, Request $request): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<div class="tab-pane" id="debug-request-' . $requestId . '-api_calls">';
         $html[] = '<table class="table"><thead>';
         $html[] = '<tr><th>URL</th><th class="">Duration</th></tr>';
@@ -561,8 +561,8 @@ class DebuggerTool
             $html[] = '<table class="table"><thead>';
             $html[] = '<tr><th>Category</th><th>Key</th><th>Value</th></tr>';
             $html[] = '</thead><tbody>';
-            $tables = array();
-            $tables['details'] = array();
+            $tables = [];
+            $tables['details'] = [];
             $tables['details']['method'] = $call->method;
             $tables['details']['url'] = '<a href="' . $url . '">Visit</a>';
             $tables['details']['status'] = $call->status;
@@ -605,7 +605,7 @@ class DebuggerTool
      */
     public function getCacheTabPane(int $requestId, Request $request): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<div class="tab-pane" id="debug-request-' . $requestId . '-cache">';
         $html[] = '<table class="table"><thead>';
         $html[] = '<tr><th>Command</th><th>Result</th><th class="">Duration</th></tr>';
@@ -637,7 +637,7 @@ class DebuggerTool
      */
     public function getLoggingTabPane(int $requestId, Request $request): string
     {
-        $html = array();
+        $html = [];
         $html[] = '<div class="tab-pane" id="debug-request-' . $requestId . '-logging">';
         $html[] = '<br/><pre>';
         foreach ($request->log as $log) {

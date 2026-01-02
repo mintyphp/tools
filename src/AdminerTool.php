@@ -79,14 +79,14 @@ class AdminerTool
 
         // database auto-login credentials
         if (!isset($_GET["username"])) {
-            $_POST["auth"] = array(
+            $_POST["auth"] = [
                 'driver' => 'server',
                 'server' => $this->host,
                 'port' => $this->port,
                 'username' => $this->username,
                 'password' => $this->password,
                 'db' => $this->db,
-            );
+            ];
         }
 
         // Adminer Extension

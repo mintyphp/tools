@@ -256,7 +256,7 @@ class ConfiguratorTool
                     $value = (float) $value;
                 } else if (is_numeric($value)) {
                     $value = (int) $value;
-                } else if (in_array($value, array('true', 'false'))) {
+                } else if (in_array($value, ['true', 'false'])) {
                     $value = $value == 'true';
                 } else {
                     $value = trim($value, '\'"');
@@ -340,7 +340,7 @@ class ConfiguratorTool
      */
     public function testConfig(array &$config): bool
     {
-        $parameters = array();
+        $parameters = [];
         foreach ($config as $class => &$variables) {
             foreach ($variables as &$v) {
                 $parameters[$class . '_' . $v['name']] = &$v['value'];
@@ -376,7 +376,7 @@ class ConfiguratorTool
             echo "INFO: MySQL database created\n";
 
             $host = $parameters['DB_host'] == 'localhost' ? 'localhost' : '%';
-            $pass = base64_encode(sha1(rand() . time() . $parameters['DB_database'], true));
+            $pass = base64_encode(sha1(random_int(0, mt_getrandmax()) . time() . $parameters['DB_database'], true));
 
             $sql = "CREATE USER '$parameters[DB_database]'@'$host' IDENTIFIED BY '$pass';";
             if (!$result = $mysqli->query($sql)) {
