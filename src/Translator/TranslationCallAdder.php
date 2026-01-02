@@ -134,7 +134,8 @@ class TranslationCallAdder
     {
         return preg_replace_callback_array(
             [
-                '/error[^=]+=[^"](".*?")/s' => function ($matches) {
+                '/error[^=]+=[^"](".*?")/s' => function (array $matches) {
+                    /** @var array{string,string} $matches */
                     return str_replace($matches[1], 't(' . $matches[1] . ')', $matches[0]);
                 },
             ],

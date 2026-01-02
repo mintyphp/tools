@@ -147,19 +147,23 @@ class ConfiguratorTool
                     if (gettype($v['value']) == 'boolean') {
                         $config[$class][$i]['value'] = $value == 'true';
                     } else if (gettype($v['value']) == 'integer') {
+                        /** @var int $value */
                         $config[$class][$i]['value'] = (int) $value;
                     } else if (gettype($v['value']) == 'double') {
+                        /** @var float $value */
                         $config[$class][$i]['value'] = (float) $value;
                     } else {
+                        /** @var string $value */
                         $config[$class][$i]['value'] = $value;
                     }
                 }
             }
         };
 
+
         foreach ($config as $class => $variables) {
             foreach ($variables as $v) {
-                $name = $v['name'];
+                $name = (string) $v['name'];
                 if (isset($post[$class][$name])) {
                     $store($class, $name, $post[$class][$name]);
                 }
