@@ -58,5 +58,6 @@ class Server
 if (isset($_SERVER['DOCUMENT_ROOT']) && isset($_SERVER['SCRIPT_NAME'])) {
     require 'vendor/autoload.php';
     require 'config/config.php';
+    /** @var array<string,string> $_SERVER */
     return (new Server($_SERVER['DOCUMENT_ROOT'], $_SERVER['SCRIPT_NAME']))->run();
 }

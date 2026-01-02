@@ -62,6 +62,7 @@ class ConfiguratorTool
     {
         $code = $this->loadCode();
         $config = $this->parseConfig($code);
+        /** @var array<string, array<string, mixed>|string> $_POST */
         $config = $this->mergePost($config, $_POST);
 
         $html = [];
@@ -120,7 +121,7 @@ class ConfiguratorTool
             throw new \Exception("Could not read: $filename");
         }
 
-        return file_get_contents($filename);
+        return file_get_contents($filename) ?: '';
     }
 
     public function writeCode(string $code): void
@@ -134,9 +135,9 @@ class ConfiguratorTool
 
     /**
      * Merge POST data into the configuration array
-     * @param array $config Original configuration array
-     * @param array $post POST data from the form
-     * @return array Merged configuration array
+     * @param array<string,list<array<string,bool|float|int|string>>> $config Original configuration array
+     * @param array<string,array<string,mixed>|string> $post POST data from the form
+     * @return array<string,list<array<string,bool|float|int|string>>> Merged configuration array
      */
     public function mergePost(array $config, array $post): array
     {
@@ -168,6 +169,11 @@ class ConfiguratorTool
         return $config;
     }
 
+    /**
+     * Build the configuration form
+     * @param array<string,list<array<string,bool|float|int|string>>> $config Configuration array
+     * @return Form The generated form
+     */
     private function buildForm(array $config): Form
     {
         E::$style = 'bulma';
@@ -178,7 +184,7 @@ class ConfiguratorTool
             $form->header(E::header()->caption($class)->class('subtitle is-4 mt-6'));
 
             foreach ($variables as $v) {
-                $name = $v['name'];
+                $name = (string) $v['name'];
                 $comment = $v['comment'];
                 $inputName = $class . '[' . $name . ']';
 
@@ -199,6 +205,11 @@ class ConfiguratorTool
         return $form;
     }
 
+    /**
+     * Flatten configuration array for form filling
+     * @param array<string,list<array<string,bool|float|int|string>>> $config Configuration array
+     * @return array<string,string> Flattened configuration array
+     */
     private function flattenConfig(array $config): array
     {
         $data = [];
@@ -217,10 +228,15 @@ class ConfiguratorTool
         return $data;
     }
 
+    /**
+     * Parse configuration code into an array
+     * @param string $code Configuration code as a string
+     * @return array<string,list<array<string,bool|float|int|string>>> Parsed configuration array
+     */
     public function parseConfig(string $code): array
     {
         $config = [];
-        $lines = preg_split("/\r?\n/", $code);
+        $lines = preg_split("/\r?\n/", $code) ?: [];
 
         foreach ($lines as $line) {
             if (preg_match('/^\s*MintyPHP\\\([a-z]+)::\$([a-z]+)\s*=(.*);\s*(\/\/(.*))?$/i', $line, $matches)) {
@@ -255,6 +271,11 @@ class ConfiguratorTool
         return $config;
     }
 
+    /**
+     * Generate configuration code from the array
+     * @param array<string,list<array<string,bool|float|int|string>>> $config Configuration array
+     * @return string Generated configuration code
+     */
     public function generateCode(array $config): string
     {
         $export = function (array $v): string {
@@ -270,11 +291,11 @@ class ConfiguratorTool
         foreach ($config as $class => $variables) {
             $nameChars = 0;
             foreach ($variables as $v) {
-                $nameChars = max($nameChars, strlen($v['name']));
+                $nameChars = max($nameChars, strlen((string)$v['name']));
             }
 
             foreach ($variables as $v) {
-                $name = sprintf("%-{$nameChars}s", $v['name']);
+                $name = sprintf("%-{$nameChars}s", (string)$v['name']);
                 $value = sprintf("%s", $export($v));
                 $code .= "MintyPHP\\$class::\$$name = $value;";
 
@@ -291,6 +312,11 @@ class ConfiguratorTool
         return $code;
     }
 
+    /**
+     * Capture output of testConfig method
+     * @param array<string,list<array<string,bool|float|int|string>>> $config Configuration array
+     * @return array{success: bool, output: string} Result of the test with output
+     */
     private function captureTestConfig(array &$config): array
     {
         ob_start();
@@ -303,6 +329,11 @@ class ConfiguratorTool
         ];
     }
 
+    /**
+     * Test the database configuration
+     * @param array<string,list<array<string,bool|float|int|string>>> $config Configuration array
+     * @return bool True if the configuration is valid, false otherwise
+     */
     public function testConfig(array &$config): bool
     {
         $parameters = array();
@@ -313,7 +344,7 @@ class ConfiguratorTool
         }
 
         mysqli_report(MYSQLI_REPORT_ERROR);
-        $mysqli = new \mysqli($parameters['DB_host'], $parameters['DB_username'], $parameters['DB_password']);
+        $mysqli = new \mysqli((string)$parameters['DB_host'] ?: null, (string)$parameters['DB_username'] ?: null, (string)$parameters['DB_password'] ?: null);
 
         if ($mysqli->connect_error) {
             echo "ERROR: MySQL connect: ($mysqli->connect_errno) $mysqli->connect_error\n";
@@ -325,7 +356,7 @@ class ConfiguratorTool
         if (!$result = $mysqli->query($sql)) {
             echo "ERROR: MySQL database check: $mysqli->error\n";
             return false;
-        } elseif ($result->num_rows) {
+        } elseif ($result instanceof \mysqli_result && $result->num_rows) {
             echo "INFO: MySQL database exists\n";
         } else {
             if ($parameters['DB_username'] != 'root') {
@@ -341,7 +372,7 @@ class ConfiguratorTool
             echo "INFO: MySQL database created\n";
 
             $host = $parameters['DB_host'] == 'localhost' ? 'localhost' : '%';
-            $pass = base64_encode(sha1(rand() . time(true) . $parameters['DB_database'], true));
+            $pass = base64_encode(sha1(rand() . time() . $parameters['DB_database'], true));
 
             $sql = "CREATE USER '$parameters[DB_database]'@'$host' IDENTIFIED BY '$pass';";
             if (!$result = $mysqli->query($sql)) {
@@ -365,7 +396,7 @@ class ConfiguratorTool
         if (!$result = $mysqli->query($sql)) {
             echo "ERROR: MySQL users table check: $mysqli->error\n";
             return false;
-        } elseif (!$result->num_rows) {
+        } elseif ($result instanceof \mysqli_result && !$result->num_rows) {
             $sql = "CREATE TABLE `$parameters[DB_database]`.`users` (";
             $sql .= "`id` int(11) NOT NULL AUTO_INCREMENT,";
             $sql .= "`username` varchar(255) COLLATE utf8_bin NOT NULL,";

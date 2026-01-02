@@ -6,6 +6,8 @@ class TranslationCallAdder
 {
     /**
      * Add translation calls to PHTML file content
+     * @param string $content PHTML file content
+     * @return string Modified PHTML content with translation calls
      */
     public function addToPhtml(string $content): string
     {
@@ -23,7 +25,7 @@ class TranslationCallAdder
                 return '__PHP-ECHO__' . $echoId;
             },
             $content
-        );
+        ) ?? $content;
 
         // Step 1b: replace PHP blocks (or translated echo blocks) with fake HTML tags
         $content = preg_replace_callback(
@@ -33,7 +35,7 @@ class TranslationCallAdder
                 return '<php id=' . $phpId . '></php>';
             },
             $content
-        );
+        ) ?? $content;
 
         // Step 2: Process attributes (alt, title, placeholder) with translation calls
         $content = preg_replace_callback(
@@ -51,7 +53,7 @@ class TranslationCallAdder
                 return $attrName . '="<php id=' . $phpId . '></php>"';
             },
             $content
-        );
+        ) ?? $content;
 
         // Step 3: Process text content between tags with translation calls
         $content = preg_replace_callback(
@@ -79,7 +81,7 @@ class TranslationCallAdder
                 return '>' . $leadingWhite . '<php id=' . $phpId . '></php>' . $trailingWhite . '<';
             },
             $content
-        );
+        ) ?? $content;
 
         // Step 4: Restore PHP blocks
         foreach ($echoBlocks as $id => $block) {
@@ -96,6 +98,9 @@ class TranslationCallAdder
 
     /**
      * Process PHP echo placeholders and create a translation block
+     * @param string $text Text content with possible PHP echo placeholders
+     * @param array<int,string> $echoBlocks Array of PHP echo blocks
+     * @return string Generated translation PHP block
      */
     private function createTranslationBlock(string $text, array $echoBlocks): string
     {
@@ -109,9 +114,9 @@ class TranslationCallAdder
                 return '%s';
             },
             $text
-        );
+        ) ?? $text;
 
-        $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $processedText)));
+        $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $processedText) ?? $processedText));
 
         if ($params) {
             return '<?php e(t("' . $escapedText . '", ' . implode(', ', $params) . ')); ?>';
@@ -122,6 +127,8 @@ class TranslationCallAdder
 
     /**
      * Add translation calls to PHP file content
+     * @param string $content PHP file content
+     * @return string Modified PHP content with translation calls
      */
     public function addToPhp(string $content): string
     {
@@ -132,6 +139,6 @@ class TranslationCallAdder
                 },
             ],
             $content
-        );
+        ) ?? $content;
     }
 }

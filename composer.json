@@ -25,6 +25,8 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^12.5"
+        "phpunit/phpunit": "^12.5",
+        "rector/rector": "^2.3",
+        "phpstan/phpstan": "^2.1"
     }
 }

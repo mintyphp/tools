@@ -66,6 +66,7 @@ class TranslatorTool
 
     /**
      * Detect domains and languages from i18n folder
+     * @return array{domains: string[], languages: array<string, string[]>}
      */
     private function detectDomainsAndLanguages(): array
     {
@@ -75,7 +76,7 @@ class TranslatorTool
         ];
 
         // Detect domains from .pot files
-        $potFiles = glob('i18n/*.pot');
+        $potFiles = glob('i18n/*.pot') ?: [];
         foreach ($potFiles as $file) {
             $domain = basename($file, '.pot');
             $info['domains'][] = $domain;
@@ -83,7 +84,7 @@ class TranslatorTool
         }
 
         // Detect languages per domain from .po files
-        $poFiles = glob('i18n/*.po');
+        $poFiles = glob('i18n/*.po') ?: [];
         foreach ($poFiles as $file) {
             $filename = basename($file, '.po');
             // Pattern: domain_language.po (e.g., default_nl.po)
@@ -107,6 +108,7 @@ class TranslatorTool
 
     private function getPostHtml(): string
     {
+        /** @var array<string,string> $_POST */
         $operation = $_POST['operation'] ?? '';
         $paths = isset($_POST['paths']) ? array_map('trim', explode(',', $_POST['paths'])) : ['pages', 'templates'];
         $domain = $_POST['domain'] ?? 'default';
@@ -183,7 +185,7 @@ class TranslatorTool
         $html[] = '<div class="box">';
         $html[] = '<h2 class="subtitle">Language Management</h2>';
         $html[] = '<p class="content">Add or remove translation languages.</p>';
-        $languageManagementForm = $this->buildLanguageManagementForm($i18nInfo);
+        $languageManagementForm = $this->buildLanguageManagementForm();
         $html[] = $languageManagementForm->toString();
         $html[] = '</div>';
 
@@ -205,7 +207,7 @@ class TranslatorTool
         return implode("\n", $html);
     }
 
-    private function buildLanguageManagementForm(array $i18nInfo): Form
+    private function buildLanguageManagementForm(): Form
     {
         E::$style = 'bulma';
         $form = E::form()->method('POST');
@@ -272,6 +274,7 @@ class TranslatorTool
 
     /**
      * Add translation function calls to template files
+     * @param string[] $paths
      */
     private function addTranslations(array $paths): void
     {
@@ -279,7 +282,7 @@ class TranslatorTool
         $adder = new TranslationCallAdder();
 
         foreach ($files as $file) {
-            $content = file_get_contents($file);
+            $content = file_get_contents($file) ?: '';
 
             if (str_ends_with($file, ".phtml")) {
                 $content = $adder->addToPhtml($content);
@@ -296,6 +299,8 @@ class TranslatorTool
 
     /**
      * Extract translations from code files
+     * @param string[] $paths
+     * @param string $domain
      */
     private function extractTranslations(array $paths, string $domain): void
     {
@@ -307,8 +312,11 @@ class TranslatorTool
         $strings = [];
         foreach ($files as $file) {
             echo "Scanning: $file\n";
-            $content = file_get_contents($file);
+            $content = file_get_contents($file) ?: '';
             $ast = $parser->parse($content);
+            if ($ast === null) {
+                continue;
+            }
             $traverser = new NodeTraverser();
             $extractor = new I18nExtractor($file, $strings);
             $traverser->addVisitor($extractor);
@@ -427,7 +435,7 @@ POT;
      */
     private function parsePotHeader(string $potFile): string
     {
-        $content = file_get_contents($potFile);
+        $content = file_get_contents($potFile) ?: '';
         $lines = explode("\n", $content);
 
         $headerLines = [];
@@ -459,10 +467,12 @@ POT;
 
     /**
      * Parse POT file and extract strings with their locations
+     * @param string $potFile
+     * @return array<string,string[]>
      */
     private function parsePotFile(string $potFile): array
     {
-        $content = file_get_contents($potFile);
+        $content = file_get_contents($potFile) ?: '';
         $strings = [];
         $lines = explode("\n", $content);
 
@@ -498,52 +508,54 @@ POT;
 
     /**
      * Generate a PO file from translated strings
+     * @param string $domain
+     * @param string $language
+     * @param array<string,array{translation:string,locations:string[]}> $translatedStrings
+     * @param string $potHeader
      */
     private function generatePoFile(string $domain, string $language, array $translatedStrings, string $potHeader): void
     {
         $poFile = "i18n/{$domain}_{$language}.po";
         $creationDate = date('Y-m-d H:i:O');
 
-        if ($potHeader !== null) {
-            // Use the POT header and modify it for PO
-            $headerLines = explode("\n", $potHeader);
-            $hasLanguage = false;
-            $hasRevisionDate = false;
+        // Use the POT header and modify it for PO
+        $headerLines = explode("\n", $potHeader);
+        $hasLanguage = false;
+        $hasRevisionDate = false;
 
-            foreach ($headerLines as $i => $line) {
-                // Check if Language field exists
-                if (preg_match('/^"Language:/', $line)) {
-                    $headerLines[$i] = '"Language: ' . $language . '\\n"';
-                    $hasLanguage = true;
-                }
-                // Check if PO-Revision-Date exists
-                if (preg_match('/^"PO-Revision-Date:/', $line)) {
-                    $headerLines[$i] = '"PO-Revision-Date: ' . $creationDate . '\\n"';
-                    $hasRevisionDate = true;
-                }
+        foreach ($headerLines as $i => $line) {
+            // Check if Language field exists
+            if (preg_match('/^"Language:/', $line)) {
+                $headerLines[$i] = '"Language: ' . $language . '\\n"';
+                $hasLanguage = true;
             }
-
-            // Add missing fields
-            if (!$hasLanguage) {
-                $headerLines[] = '"Language: ' . $language . '\\n"';
+            // Check if PO-Revision-Date exists
+            if (preg_match('/^"PO-Revision-Date:/', $line)) {
+                $headerLines[$i] = '"PO-Revision-Date: ' . $creationDate . '\\n"';
+                $hasRevisionDate = true;
             }
-            if (!$hasRevisionDate) {
-                // Insert after POT-Creation-Date if it exists
-                $inserted = false;
-                foreach ($headerLines as $i => $line) {
-                    if (preg_match('/^"POT-Creation-Date:/', $line)) {
-                        array_splice($headerLines, $i + 1, 0, ['"PO-Revision-Date: ' . $creationDate . '\\n"']);
-                        $inserted = true;
-                        break;
-                    }
-                }
-                if (!$inserted) {
-                    array_unshift($headerLines, '"PO-Revision-Date: ' . $creationDate . '\\n"');
-                }
-            }
-
-            $content = "# Translation file for $domain ($language)\nmsgid \"\"\nmsgstr \"\"\n" . implode("\n", $headerLines);
         }
+
+        // Add missing fields
+        if (!$hasLanguage) {
+            $headerLines[] = '"Language: ' . $language . '\\n"';
+        }
+        if (!$hasRevisionDate) {
+            // Insert after POT-Creation-Date if it exists
+            $inserted = false;
+            foreach ($headerLines as $i => $line) {
+                if (preg_match('/^"POT-Creation-Date:/', $line)) {
+                    array_splice($headerLines, $i + 1, 0, ['"PO-Revision-Date: ' . $creationDate . '\\n"']);
+                    $inserted = true;
+                    break;
+                }
+            }
+            if (!$inserted) {
+                array_unshift($headerLines, '"PO-Revision-Date: ' . $creationDate . '\\n"');
+            }
+        }
+
+        $content = implode("\n", $headerLines);
 
         foreach ($translatedStrings as $original => $data) {
             $content .= "\n";
@@ -569,6 +581,7 @@ POT;
 
     /**
      * Compile .po files to .json files
+     * @param string $domain
      */
     private function compileTranslations(string $domain): void
     {
@@ -617,6 +630,8 @@ POT;
 
     /**
      * Recursively scan directories for files
+     * @param string[] $dirpaths
+     * @return string[]
      */
     private function scanFiles(array $dirpaths): array
     {
@@ -625,10 +640,13 @@ POT;
                 $root = substr($root, 0, strlen($root) - 1);
             }
 
-            if (!is_dir($root)) return array();
+            if (!is_dir($root)) return [];
 
-            $files = array();
+            $files = [];
             $dir_handle = opendir($root);
+            if ($dir_handle === false) {
+                return [];
+            }
 
             while (($entry = readdir($dir_handle)) !== false) {
 
@@ -646,7 +664,7 @@ POT;
                     $files[] = $root . DIRECTORY_SEPARATOR . $entry;
                 }
             }
-            return (array) $files;
+            return $files;
         };
 
         $files = [];
@@ -657,6 +675,10 @@ POT;
         return $files;
     }
 
+    /**
+     * Split string into lines without breaking words
+     * @return string[]
+     */
     private function wordAwareStringSplit(string $string, int $maxLengthOfLine): array
     {
         if (strlen($string) < $maxLengthOfLine - 6) {
@@ -683,7 +705,7 @@ POT;
             $lineAccumulator = $currentWordWithSpace;
         }
 
-        if ($currentLine !== '') {
+        if (trim($currentLine) !== '') {
             $lines[] = $currentLine;
         }
 
@@ -696,18 +718,27 @@ POT;
 class I18nExtractor extends NodeVisitorAbstract
 {
     private string $filename;
+    /** @var array<string,string[]> */
     private array $strings;
 
+    /**
+     * Constructor
+     * @param string $filename
+     * @param array<string,string[]> $strings
+     */
     public function __construct(string $filename, array $strings)
     {
         $this->filename = $filename;
         $this->strings = $strings;
     }
 
-    public function leaveNode(Node $node)
+    /**
+     * Process PHP file content to extract translation strings
+     */
+    public function leaveNode(Node $node): mixed
     {
         if ($node instanceof Node\Expr\FuncCall) {
-            if ($node->name->name === 't') {
+            if ($node->name instanceof Node\Name && $node->name->toString() === 't') {
                 if ($node->args[0] instanceof \PhpParser\Node\Arg) {
                     if ($node->args[0]->value instanceof \PhpParser\Node\Scalar\String_) {
                         $string = $node->args[0]->value->value;
@@ -719,8 +750,13 @@ class I18nExtractor extends NodeVisitorAbstract
                 }
             }
         }
+        return null;
     }
 
+    /**
+     * Get extracted strings
+     * @return array<string,string[]>
+     */
     public function getStrings(): array
     {
         return $this->strings;

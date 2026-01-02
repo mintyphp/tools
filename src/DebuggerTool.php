@@ -197,7 +197,8 @@ class DebuggerTool
                 $key = '[' . $key . ']';
             }
             if (is_array($value)) {
-                $result = $result + $this->flattenParameters($value, $prefix . $key);
+                /** @var array<string,mixed> $value */
+                $result += $this->flattenParameters($value, $prefix . $key);
             } else {
                 $result[$prefix . $key] = $value;
             }
@@ -424,7 +425,7 @@ class DebuggerTool
             $html[] = '</thead><tbody>';
             foreach ($query->result as $i => $tables) {
                 $f = 0;
-                $fc = array_sum(array_map("count", $tables));
+                $fc = array_sum(array_map('count', $tables));
                 foreach ($tables as $table => $fields) {
                     $t = 0;
                     $tc = count($fields);
@@ -577,6 +578,7 @@ class DebuggerTool
             foreach ($tables as $table => $fields) {
                 $t = 0;
                 $tc = count($fields);
+                /** @var array<string,string> $fields */
                 foreach ($fields as $field => $value) {
                     $tableCell = $t ? '' : '<td rowspan="' . $tc . '">' . $table . '</td>';
                     $html[] = '<tr>' . $tableCell . '<td>' . $field . '</td><td>' . $value . '</td></tr>';
@@ -610,7 +612,7 @@ class DebuggerTool
         $html[] = '</thead><tbody>';
         $count = 0;
         $total = 0;
-        foreach ($request->cache as $i => $call) {
+        foreach ($request->cache as $call) {
             $count++;
             $total += $call->duration;
 
