@@ -423,9 +423,10 @@ class DebuggerTool
         } else if (is_array($query->result)) {
             $html[] = '<tr><th>#</th><th>Table</th><th>Field</th><th>Value</th></tr>';
             $html[] = '</thead><tbody>';
+            /** @var array<string, array<string, mixed>> $tables */
             foreach ($query->result as $i => $tables) {
                 $f = 0;
-                $fc = array_sum(array_map('count', $tables));
+                $fc = array_sum(array_map(fn($x) => count($x), $tables));
                 foreach ($tables as $table => $fields) {
                     $t = 0;
                     $tc = count($fields);
@@ -465,9 +466,10 @@ class DebuggerTool
         } else if (is_array($query->explain)) {
             $html[] = '<tr><th>#</th><th>Table</th><th>Field</th><th>Value</th></tr>';
             $html[] = '</thead><tbody>';
+            /** @var array<string, array<string, mixed>> $tables */
             foreach ($query->explain as $i => $tables) {
                 $f = 0;
-                $fc = array_sum(array_map("count", $tables));
+                $fc = array_sum(array_map(fn($x) => count($x), $tables));
                 foreach ($tables as $table => $fields) {
                     $t = 0;
                     $tc = count($fields);
@@ -570,9 +572,9 @@ class DebuggerTool
             $tables['details']['data_received'] = $call->body ? '<a href="data:application/json;charset=UTF-8;base64,' . base64_encode($call->body) . '">View (' . strlen($call->body) . ' bytes)</a>' : '-';
             $tables['details']['headers_sent'] = $call->headers ? '<a href="data:application/json;charset=UTF-8;base64,' . base64_encode(json_encode($call->headers, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES + JSON_UNESCAPED_UNICODE) ?: '') . '">' . count($call->headers) . ' headers</a>' : '-';
             $tables['details']['headers_received'] = $call->responseHeaders ? '<a href="data:application/json;charset=UTF-8;base64,' . base64_encode(json_encode($call->responseHeaders, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES + JSON_UNESCAPED_UNICODE) ?: '') . '">' . count($call->responseHeaders) . ' headers</a>' : '-';
-            $tables['timing'] = array_map(function ($v) {
+            $tables['timing'] = array_map(function (float $v) {
                 return sprintf('%.2f ms', $v * 1000);
-            }, $call->timing);
+            }, $call->timing->toArray());
 
             $tables['options'] = $call->options;
             foreach ($tables as $table => $fields) {
@@ -618,7 +620,7 @@ class DebuggerTool
 
             $html[] = '<tr>';
             $html[] = '<td>' . strtoupper($call->command) . ' ' . implode(' ', $call->arguments) . '</td>';
-            $html[] = '<td>' . $call->result . '</td>';
+            $html[] = '<td>' . htmlspecialchars(is_string($call->result) ? $call->result : '') . '</td>';
             $html[] = '<td>' . sprintf('%.2f ms', $call->duration * 1000) . '</td>';
             $html[] = '</tr>';
         }
