@@ -1,0 +1,10 @@
+parameters:
+    level: 6
+    paths:
+        - src
+        - tests
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        -
+            message: '#Path in require\(\) .* is not a file or it does not exist\.#' # Broad pattern is intentional: PHPStan cannot resolve dynamic require() paths in Server.php reliably.
+            path: src/Server.php
