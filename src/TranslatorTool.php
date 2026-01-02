@@ -278,7 +278,7 @@ class TranslatorTool
      */
     private function addTranslations(array $paths): void
     {
-        $files = $this->scanFiles($paths);
+        $files = $this->scanDirpaths($paths);
         $adder = new TranslationCallAdder();
 
         foreach ($files as $file) {
@@ -304,7 +304,7 @@ class TranslatorTool
      */
     private function extractTranslations(array $paths, string $domain): void
     {
-        $files = $this->scanFiles($paths);
+        $files = $this->scanDirpaths($paths);
 
         $parserFactory = new ParserFactory();
         $parser = $parserFactory->createForNewestSupportedVersion();
@@ -633,45 +633,55 @@ POT;
      * @param string[] $dirpaths
      * @return string[]
      */
-    private function scanFiles(array $dirpaths): array
+    private function scanDirpaths(array $dirpaths): array
     {
-        $f = function ($root) use (&$f) {
-            if (substr($root, -1) === DIRECTORY_SEPARATOR) {
-                $root = substr($root, 0, strlen($root) - 1);
-            }
-
-            if (!is_dir($root)) return [];
-
-            $files = [];
-            $dir_handle = opendir($root);
-            if ($dir_handle === false) {
-                return [];
-            }
-
-            while (($entry = readdir($dir_handle)) !== false) {
-
-                if ($entry === '.' || $entry === '..') continue;
-
-                if (is_dir($root . DIRECTORY_SEPARATOR . $entry)) {
-                    $sub_files = $f(
-                        $root .
-                            DIRECTORY_SEPARATOR .
-                            $entry .
-                            DIRECTORY_SEPARATOR
-                    );
-                    $files = array_merge($files, $sub_files);
-                } else {
-                    $files[] = $root . DIRECTORY_SEPARATOR . $entry;
-                }
-            }
-            return $files;
-        };
-
+        /** @var string[] */
         $files = [];
         foreach ($dirpaths as $dirpath) {
-            $files = array_merge($files, $f($dirpath));
+            foreach ($this->scanDirpath($dirpath) as $file) {
+                $files[] = $file;
+            }
         }
 
+        return $files;
+    }
+
+    /**
+     * Recursively scan a directory for files
+     * @param string $root
+     * @return string[]
+     */
+    private function scanDirpath(string $root): array
+    {
+        if (substr($root, -1) === DIRECTORY_SEPARATOR) {
+            $root = substr($root, 0, strlen($root) - 1);
+        }
+
+        if (!is_dir($root)) return [];
+
+        /** @var string[] */
+        $files = [];
+        $dir_handle = opendir($root);
+        if ($dir_handle === false) {
+            return [];
+        }
+
+        while (($entry = readdir($dir_handle)) !== false) {
+
+            if ($entry === '.' || $entry === '..') continue;
+
+            if (is_dir($root . DIRECTORY_SEPARATOR . $entry)) {
+                $sub_files = $this->scanDirpath(
+                    $root .
+                        DIRECTORY_SEPARATOR .
+                        $entry .
+                        DIRECTORY_SEPARATOR
+                );
+                $files = array_merge($files, $sub_files);
+            } else {
+                $files[] = $root . DIRECTORY_SEPARATOR . $entry;
+            }
+        }
         return $files;
     }
 
