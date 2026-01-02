@@ -191,4 +191,25 @@ HTML;
         // Should preserve DOCTYPE and html tags
         $this->assertEquals('<?php use bla; ?><!DOCTYPE html><html lang="en"><head></head><body></body></html>', $output);
     }
+
+    public function testAddToPhtml_ExistingPhpEchoBlock(): void
+    {
+        $input = '<div>username: <?php e($username); ?></div>';
+        $output = $this->adder->addToPhtml($input);
+        $this->assertEquals('<div><?php e(t("username: %s", $username)); ?></div>', trim($output));
+    }
+
+    public function testAddToPhtml_ExistingTranslatedPhpEchoBlock(): void
+    {
+        $input = '<div><?php e(t("Already translated")); ?></div>';
+        $output = $this->adder->addToPhtml($input);
+        $this->assertEquals('<div><?php e(t("Already translated")); ?></div>', trim($output));
+    }
+
+    public function testAddToPhtml_CombiningTextAndPhpOutput(): void
+    {
+        $input = '<a href="logout">Logout "<?php e($username); ?>"</a>';
+        $output = $this->adder->addToPhtml($input);
+        $this->assertEquals('<a href="logout"><?php e(t("Logout \'%s\'", $username)); ?></a>', $output);
+    }
 }

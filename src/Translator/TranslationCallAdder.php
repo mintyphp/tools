@@ -11,54 +11,125 @@ class TranslationCallAdder
     {
         // Step 1: Extract all PHP blocks and replace with fake HTML tags
         $phpBlocks = [];
+        $echoBlocks = [];
         $phpId = 0;
+        $echoId = 0;
 
-        // replace doctype with fake tag
-        $content = preg_replace('/<!DOCTYPE(.*?)>/is', '<fakedoctype$1></fakedoctype>', $content);
-        // replace html or head tag with fake tag
-        $content = preg_replace('/<(\/)?(html|head)(.*?)>/is', '<$1fake$2$3>', $content);
+        // Step 1a: replace PHP echo blocks (that are not already translated) with placeholders
+        $content = preg_replace_callback(
+            '/<\?php\s*e\((?!t\()(.*?)\);\s*\?>/s',
+            function ($matches) use (&$echoBlocks, &$echoId) {
+                $echoId++;
+                $echoBlocks[$echoId] = $matches[1];
+                return '__PHP-ECHO__' . $echoId;
+            },
+            $content
+        );
 
-        // replace PHP blocks
+        // Step 1b: replace PHP blocks (or translated echo blocks) with fake HTML tags
         $content = preg_replace_callback(
             '/<\?php(?:.*?\?>|.*$)/s',
             function ($matches) use (&$phpBlocks, &$phpId) {
                 $phpId++;
                 $phpBlocks[$phpId] = $matches[0];
-                return '<php id="' . $phpId . '"></php>';
+                return '<php id=' . $phpId . '></php>';
             },
             $content
         );
 
-        // Step 2: Load into DOMDocument
-        $dom = new \DOMDocument();
-        libxml_use_internal_errors(true);
+        // Step 2: Process attributes (alt, title, placeholder) with translation calls
+        $content = preg_replace_callback(
+            '/\b(alt|title|placeholder)\s*=\s*"([^"<>]+)"/i',
+            function ($matches) use (&$phpBlocks, &$phpId) {
+                $attrName = $matches[1];
+                $attrValue = $matches[2];
 
-        // Wrap content to ensure valid HTML structure
-        $wrappedContent = '<?xml version="1.0" encoding="UTF-8"?><fakeroot>' . $content . '</fakeroot>';
-        $dom->loadHTML($wrappedContent, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOERROR | LIBXML_NOWARNING);
-        libxml_clear_errors();
+                // Skip if empty
+                if (!trim($attrValue)) {
+                    return $matches[0];
+                }
 
-        // Step 3: Process the DOM tree
-        $this->processNodeForTranslation($dom->documentElement, $phpBlocks, $phpId);
+                // If attrValue contains PHP echo placeholders, add parameters 
+                $params = [];
+                $paramAttrValue = preg_replace_callback(
+                    '/__PHP-ECHO__(\d+)/',
+                    function ($echoMatches) use (&$params) {
+                        $params[] = $echoMatches[0];
+                        return '%s';
+                    },
+                    $attrValue
+                );
 
-        // Step 4: Export HTML (extract innerHTML of fakeroot)
-        $fakeroot = $dom->getElementsByTagName('fakeroot')->item(0);
-        $html = '';
-        if ($fakeroot) {
-            foreach ($fakeroot->childNodes as $child) {
-                $html .= $dom->saveHTML($child);
-            }
-        }
-        // Restore doctype
-        $html = preg_replace('/<fakedoctype(.*?)><\/fakedoctype>/is', '<!DOCTYPE$1>', $html);
-        // Restore html or head tag
-        $html = preg_replace('/<(\/)?fake(html|head)(.*?)>/is', '<$1$2$3>', $html);
+                $phpId++;
+                if ($params && $paramAttrValue !== '%s') {
+                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $paramAttrValue)));
+                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '", ' . implode(', ', $params) . ')); ?>';
+                } else {
+                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $attrValue)));
+                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '")); ?>';
+                }
+                return $attrName . '="<php id=' . $phpId . '></php>"';
+            },
+            $content
+        );
 
-        // Step 5: Replace all fake PHP tags back with actual PHP blocks using string replacement
+        // Step 3: Process text content between tags with translation calls
+        $content = preg_replace_callback(
+            '/>([^<>]+)</s',
+            function ($matches) use (&$phpBlocks, &$phpId) {
+                $text = $matches[1];
+
+                // Skip if whitespace-only or contains fake PHP tags
+                if (!trim($text) || str_contains($text, '<php id=')) {
+                    return $matches[0];
+                }
+
+                // Preserve leading and trailing whitespace
+                preg_match('/^(\s*)(.*?)(\s*)$/s', $text, $whiteMatches);
+                $leadingWhite = $whiteMatches[1];
+                $trimmedText = $whiteMatches[2];
+                $trailingWhite = $whiteMatches[3];
+
+                // Skip if no actual content
+                if (!$trimmedText) {
+                    return $matches[0];
+                }
+
+                // If trimmedText contains PHP echo placeholders, add parameters 
+                $params = [];
+                $paramTrimmedText = preg_replace_callback(
+                    '/__PHP-ECHO__(\d+)/',
+                    function ($echoMatches) use (&$params) {
+                        $params[] = $echoMatches[0];
+                        return '%s';
+                    },
+                    $trimmedText
+                );
+
+                // Create new PHP block with translation call
+                $phpId++;
+                if ($params && $paramTrimmedText !== '%s') {
+                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $paramTrimmedText)));
+                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '", ' . implode(', ', $params) . ')); ?>';
+                } else {
+                    $escapedText = str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $trimmedText)));
+                    $phpBlocks[$phpId] = '<?php e(t("' . $escapedText . '")); ?>';
+                }
+                return '>' . $leadingWhite . '<php id=' . $phpId . '></php>' . $trailingWhite . '<';
+            },
+            $content
+        );
+
+        $html = $content;
+
+        // Step 4: Replace all fake PHP tags back with actual PHP blocks using string replacement
         foreach ($phpBlocks as $id => $block) {
-            $html = str_replace('<php id="' . $id . '"></php>', $block, $html);
-            // Also handle escaped without quote variant for attributes
-            $html = str_replace('&lt;php id=' . $id . '&gt;&lt;/php&gt;', $block, $html);
+            $html = str_replace('<php id=' . $id . '></php>', $block, $html);
+        }
+
+        // Step 5: Replace all fake PHP echo placeholders back with actual PHP echo blocks
+        foreach ($echoBlocks as $id => $block) {
+            $html = str_replace('__PHP-ECHO__' . $id, $block, $html);
         }
 
         return $html;
@@ -77,84 +148,5 @@ class TranslationCallAdder
             ],
             $content
         );
-    }
-
-    /**
-     * Recursively process DOM nodes to add translations
-     */
-    private function processNodeForTranslation(\DOMNode $node, array &$phpBlocks, int &$phpId): void
-    {
-        // Process attributes for translation (alt, title, placeholder)
-        if ($node instanceof \DOMElement) {
-            foreach (['alt', 'title', 'placeholder'] as $attrName) {
-                if ($node->hasAttribute($attrName)) {
-                    $attrValue = $node->getAttribute($attrName);
-
-                    // Skip if empty or already has translation marker
-                    if (trim($attrValue) && !str_contains($attrValue, '<php id=')) {
-                        $phpId++;
-                        $phpBlocks[$phpId] = '<?php e(t("' . $attrValue . '")); ?>';
-
-                        // We'll mark it in a way we can extract later
-                        $node->setAttribute($attrName, '<php id=' . $phpId . '></php>');
-                    }
-                }
-            }
-        }
-
-        // Process text nodes
-        if ($node->nodeType === XML_TEXT_NODE) {
-            $text = $node->nodeValue;
-
-            // Skip if empty or whitespace-only
-            if (!trim($text)) {
-                return;
-            }
-
-            // Preserve leading and trailing whitespace
-            $leadingWhite = '';
-            $trailingWhite = '';
-            if (preg_match('/^(\s*)(.*?)(\s*)$/s', $text, $whiteMatches)) {
-                $leadingWhite = $whiteMatches[1];
-                $trimmedText = $whiteMatches[2];
-                $trailingWhite = $whiteMatches[3];
-            } else {
-                $trimmedText = $text;
-            }
-
-            // Skip if no actual content
-            if (!$trimmedText) {
-                return;
-            }
-
-            // Create new PHP block with translation call
-            $phpId++;
-            $phpBlocks[$phpId] = '<?php e(t("' . str_replace('\"', "'", addslashes(preg_replace('/\s+/', ' ', $trimmedText))) . '")); ?>';
-
-            // Replace text node with php element
-            $phpElement = $node->ownerDocument->createElement('php');
-            $phpElement->setAttribute('id', (string)$phpId);
-
-            $parent = $node->parentNode;
-            if ($leadingWhite) {
-                $parent->insertBefore($node->ownerDocument->createTextNode($leadingWhite), $node);
-            }
-            $parent->replaceChild($phpElement, $node);
-            if ($trailingWhite) {
-                $parent->insertBefore($node->ownerDocument->createTextNode($trailingWhite), $phpElement->nextSibling);
-            }
-
-            return;
-        }
-
-        // Recursively process child nodes (make a copy of the list since we modify it)
-        $children = [];
-        foreach ($node->childNodes as $child) {
-            $children[] = $child;
-        }
-
-        foreach ($children as $child) {
-            $this->processNodeForTranslation($child, $phpBlocks, $phpId);
-        }
     }
 }
