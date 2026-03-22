@@ -11,8 +11,8 @@
     "require": {
         "php": ">=7.0",
         "nikic/php-parser": "*",
-        "mintyphp/core": "^3.2",
-        "mintyphp/forms": "^1.1"
+        "mintyphp/core": "^4",
+        "mintyphp/forms": "*"
     },
     "autoload": {
         "psr-4": {
