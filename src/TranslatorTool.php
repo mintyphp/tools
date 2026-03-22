@@ -485,11 +485,13 @@ POT;
             if (str_starts_with($line, '#:')) {
                 $currentLocations[] = trim(substr($line, 2));
             } elseif (str_starts_with($line, 'msgid')) {
-                $currentMsgid = [json_decode(substr(trim($line), 6))];
+                $decoded = json_decode(substr(trim($line), 6));
+                $currentMsgid = [is_string($decoded) ? $decoded : ''];
                 // Check for multi-line msgid
                 $j = $i + 1;
                 while ($j < count($lines) && str_starts_with(trim($lines[$j]), '"')) {
-                    $currentMsgid[] = json_decode(trim($lines[$j]));
+                    $part = json_decode(trim($lines[$j]));
+                    $currentMsgid[] = is_string($part) ? $part : '';
                     $j++;
                 }
                 $i = $j - 1;
@@ -603,16 +605,20 @@ POT;
             $msgstr = [];
             while (($line = fgets($read)) !== false) {
                 if (substr($line, 0, 5) == 'msgid') {
-                    $msgid = [json_decode(substr(rtrim($line, "\n"), 6))];
+                    $decoded = json_decode(substr(rtrim($line, "\n"), 6));
+                    $msgid = [is_string($decoded) ? $decoded : ''];
                     $scanid = true;
                 } elseif (substr($line, 0, 6) == 'msgstr') {
-                    $msgstr = [json_decode(substr(rtrim($line, "\n"), 7))];
+                    $decoded = json_decode(substr(rtrim($line, "\n"), 7));
+                    $msgstr = [is_string($decoded) ? $decoded : ''];
                     $scanid = false;
                 } elseif (substr($line, 0, 1) == '"') {
                     if ($scanid) {
-                        $msgid[] = json_decode(rtrim($line, "\n"));
+                        $part = json_decode(rtrim($line, "\n"));
+                        $msgid[] = is_string($part) ? $part : '';
                     } else {
-                        $msgstr[] = json_decode(rtrim($line, "\n"));
+                        $part = json_decode(rtrim($line, "\n"));
+                        $msgstr[] = is_string($part) ? $part : '';
                     }
                 } else {
                     $strings[implode('', $msgid)] = implode('', $msgstr);

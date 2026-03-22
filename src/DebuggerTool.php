@@ -628,7 +628,7 @@ class DebuggerTool
             $total += $call->duration;
 
             $html[] = '<tr>';
-            $html[] = '<td>' . strtoupper($call->command) . ' ' . implode(' ', $call->arguments) . '</td>';
+            $html[] = '<td>' . strtoupper($call->command) . ' ' . implode(' ', array_map(static fn($a) => is_scalar($a) ? (string) $a : '', $call->arguments)) . '</td>';
             $html[] = '<td>' . htmlspecialchars(is_string($call->result) ? $call->result : '') . '</td>';
             $html[] = '<td>' . sprintf('%.2f ms', $call->duration * 1000) . '</td>';
             $html[] = '</tr>';

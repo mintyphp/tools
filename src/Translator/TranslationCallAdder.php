@@ -68,9 +68,9 @@ class TranslationCallAdder
 
                 // Preserve leading and trailing whitespace
                 preg_match('/^(\s*)(.*?)(\s*)$/s', $text, $whiteMatches);
-                $leadingWhite = $whiteMatches[1];
-                $trimmedText = $whiteMatches[2];
-                $trailingWhite = $whiteMatches[3];
+                $leadingWhite = $whiteMatches[1] ?? '';
+                $trimmedText = $whiteMatches[2] ?? '';
+                $trailingWhite = $whiteMatches[3] ?? '';
 
                 // Skip if no actual content or only a PHP echo placeholder
                 if (!$trimmedText || preg_match('/^__PHP-ECHO__\d+$/', $trimmedText)) {
@@ -110,7 +110,7 @@ class TranslationCallAdder
             function ($matches) use (&$params, $echoBlocks) {
                 $echoBlock = $echoBlocks[$matches[1]];
                 preg_match('/<\?php\s*e\((.*?)\);\s*\?>/', $echoBlock, $innerMatches);
-                $params[] = $innerMatches[1];
+                $params[] = $innerMatches[1] ?? '""';
                 return '%s';
             },
             $text
