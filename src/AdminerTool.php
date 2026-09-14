@@ -100,6 +100,11 @@ function adminer_object()
             echo "<p><a href='?'>Click to login</a></p>\n";
         }
     }
+
+    if (isset($_POST["auth"]) && !isset($_POST["token"]) && !empty($_SESSION["token"])) {
+        $_POST["token"] = Adminer\get_token();
+    }
+
     return new AdminerSoftware();
 }
 EOD;
